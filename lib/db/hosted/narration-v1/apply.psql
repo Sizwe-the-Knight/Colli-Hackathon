@@ -1,0 +1,61 @@
+-- PREPARED ONLY: use the direct verified-TLS administrator connection, never colli_app.
+\set ON_ERROR_STOP on
+\set VERBOSITY sqlstate
+\pset pager off
+BEGIN;
+SET LOCAL timezone='UTC';
+SET LOCAL statement_timeout='15s';
+SET LOCAL lock_timeout='2s';
+\ir ../v1/connection-guard.psql
+\if :{?manifest_sha256}
+\else
+SELECT 1/0 AS missing_original_manifest_sha256;
+\endif
+\if :{?narration_sha256}
+\else
+SELECT 1/0 AS missing_narration_sha256;
+\endif
+SELECT set_config('colli.manifest_sha256', :'manifest_sha256', true);
+SELECT set_config('colli.narration_sha256', :'narration_sha256', true);
+\ir ../v1/assert-journal.sql
+DO $guard$
+BEGIN
+  IF current_setting('colli.narration_sha256') !~ '^[a-f0-9]{64}$'
+    OR to_regclass('auth.narration_attempts') IS NOT NULL
+    OR to_regprocedure('auth.reserve_narration(text,text,boolean,integer,integer)') IS NOT NULL
+    OR to_regprocedure('auth.read_narration(text,text)') IS NOT NULL
+    OR to_regprocedure('auth.save_narration(text,text,jsonb)') IS NOT NULL
+    OR to_regclass('colli_hosted_migrations.narration_v1') IS NOT NULL
+  THEN RAISE EXCEPTION 'Narration upgrade state rejected'; END IF;
+  -- Retain provider-created ADMIN-only memberships; reject any unexpected SET path.
+  IF EXISTS (SELECT 1 FROM pg_catalog.pg_auth_members
+    WHERE member IN ('colli_app'::regrole,'colli_migrator'::regrole,'colli_auth_ops'::regrole)
+      OR (roleid IN ('colli_app'::regrole,'colli_migrator'::regrole,'colli_auth_ops'::regrole)
+        AND NOT (member=session_user::regrole AND admin_option AND NOT inherit_option AND NOT set_option
+          AND EXISTS (SELECT 1 FROM pg_catalog.pg_roles g WHERE g.oid=grantor AND g.rolsuper))))
+  THEN RAISE EXCEPTION 'Unexpected pre-upgrade membership'; END IF;
+END;
+$guard$;
+-- Transaction-local in effect: these rows are removed before COMMIT, and an
+-- interrupted connection rolls the entire uncommitted transaction back.
+GRANT colli_migrator, colli_auth_ops TO CURRENT_USER WITH INHERIT FALSE GRANTED BY CURRENT_USER;
+GRANT colli_migrator, colli_auth_ops TO CURRENT_USER WITH SET TRUE GRANTED BY CURRENT_USER;
+GRANT colli_migrator, colli_auth_ops TO CURRENT_USER WITH ADMIN FALSE GRANTED BY CURRENT_USER;
+\ir 001_narration_quotas.sql
+CREATE TABLE colli_hosted_migrations.narration_v1 (
+  version integer PRIMARY KEY CHECK (version=1),
+  artifact_sha256 text NOT NULL CHECK (artifact_sha256 ~ '^[a-f0-9]{64}$'),
+  executed_by text NOT NULL,
+  applied_at timestamptz NOT NULL DEFAULT clock_timestamp()
+);
+REVOKE ALL ON colli_hosted_migrations.narration_v1 FROM PUBLIC, colli_app, colli_migrator, colli_auth_ops;
+INSERT INTO colli_hosted_migrations.narration_v1(version,artifact_sha256,executed_by)
+VALUES(1,current_setting('colli.narration_sha256'),session_user);
+SET LOCAL ROLE colli_migrator;
+SELECT count(*) AS initial_reserved_calls,count(*)*8704 AS initial_reserved_tokens FROM auth.narration_attempts;
+RESET ROLE;
+-- Reuses the exact original ADMIN-only restoration assertion. Never grant the
+-- migrator membership in colli_auth_ops, or remove provider-created memberships.
+\ir ../v1/05-membership-cleanup.sql
+\ir verify.sql
+COMMIT;

@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "provenance": { "kind": "synthetic", "importId": "demo-two-days", "label": "Synthetic demonstration: invented usage, not real analytics" },
+  "sourceIds": ["demo-export"],
+  "periods": {
+    "previous": { "start": "2026-10-19T00:00:00Z", "end": "2026-10-20T00:00:00Z", "coverage": "complete" },
+    "current": { "start": "2026-10-20T00:00:00Z", "end": "2026-10-21T00:00:00Z", "coverage": "complete" }
+  },
+  "records": [
+    { "sourceId": "demo-export", "provider": "openai", "model": "demo-model-a", "eventId": "p1", "timestamp": "2026-10-19T08:00:00Z", "inputTokens": 100, "outputTokens": 50, "cost": { "amount": "0.10", "currency": "USD" }, "outcome": "success", "workflow": "Synthetic summarization" },
+    { "sourceId": "demo-export", "provider": "anthropic", "model": "demo-model-b", "eventId": "p2", "timestamp": "2026-10-19T10:00:00Z", "inputTokens": 200, "outputTokens": 100, "cost": { "amount": "0.20", "currency": "USD" }, "outcome": "success" },
+    { "sourceId": "demo-export", "provider": "openai", "model": "demo-model-a", "eventId": "c1", "timestamp": "2026-10-20T00:00:00Z", "inputTokens": 150, "outputTokens": 75, "cost": { "amount": "0.15", "currency": "USD" }, "outcome": "success" },
+    { "sourceId": "demo-export", "provider": "anthropic", "model": "demo-model-b", "eventId": "c2", "timestamp": "2026-10-20T10:00:00Z", "inputTokens": 250, "outputTokens": 125, "cost": { "amount": "0.25", "currency": "USD" }, "outcome": "failure" },
+    { "sourceId": "demo-export", "provider": "openai", "model": "demo-model-a", "eventId": "c3", "timestamp": "2026-10-20T14:00:00Z", "inputTokens": 100, "outputTokens": 50, "cost": { "amount": "0.10", "currency": "EUR" }, "outcome": "success" }
+  ]
+}

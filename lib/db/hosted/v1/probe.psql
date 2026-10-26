@@ -1,0 +1,95 @@
+-- SEPARATE APPROVAL REQUIRED. No Colli object/role or application data is touched.
+\set ON_ERROR_STOP on
+\set VERBOSITY sqlstate
+\pset pager off
+BEGIN ISOLATION LEVEL READ COMMITTED;
+SET LOCAL timezone='UTC';
+SET LOCAL statement_timeout='10s';
+SET LOCAL lock_timeout='2s';
+SET LOCAL idle_in_transaction_session_timeout='15s';
+\ir connection-guard.psql
+SELECT pg_advisory_xact_lock(1129270348,90);
+SELECT md5(jsonb_build_array(
+  (SELECT datacl::text FROM pg_database WHERE datname=current_database()),
+  (SELECT nspacl::text FROM pg_namespace WHERE nspname='public'))::text) AS probe_baseline_sha
+\gset
+\echo Probe baseline fingerprint: :probe_baseline_sha
+DO $guard$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE rolname IN ('colli_v1_probe_m','colli_v1_probe_o','colli_v1_probe_a'))
+     OR EXISTS (SELECT 1 FROM pg_catalog.pg_namespace WHERE nspname='colli_v1_probe')
+  THEN RAISE EXCEPTION 'Probe name collision; do not reuse'; END IF;
+END;
+$guard$;
+CREATE ROLE colli_v1_probe_m NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS;
+CREATE ROLE colli_v1_probe_o NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS CONNECTION LIMIT 0;
+CREATE ROLE colli_v1_probe_a LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS PASSWORD NULL;
+-- Exercise database/public-schema grant authority transactionally; never committed.
+REVOKE ALL ON DATABASE neondb FROM PUBLIC;
+GRANT CONNECT, CREATE ON DATABASE neondb TO colli_v1_probe_m;
+GRANT CONNECT ON DATABASE neondb TO colli_v1_probe_a;
+REVOKE ALL ON SCHEMA public FROM PUBLIC;
+GRANT USAGE, CREATE ON SCHEMA public TO colli_v1_probe_m;
+GRANT colli_v1_probe_m, colli_v1_probe_o, colli_v1_probe_a TO CURRENT_USER WITH INHERIT FALSE GRANTED BY CURRENT_USER;
+GRANT colli_v1_probe_m, colli_v1_probe_o, colli_v1_probe_a TO CURRENT_USER WITH SET TRUE GRANTED BY CURRENT_USER;
+GRANT colli_v1_probe_m, colli_v1_probe_o, colli_v1_probe_a TO CURRENT_USER WITH ADMIN FALSE GRANTED BY CURRENT_USER;
+GRANT colli_v1_probe_o TO colli_v1_probe_m WITH INHERIT FALSE;
+GRANT colli_v1_probe_o TO colli_v1_probe_m WITH SET TRUE;
+GRANT colli_v1_probe_o TO colli_v1_probe_m WITH ADMIN FALSE;
+DO $probe$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_auth_members WHERE roleid='colli_v1_probe_o'::regrole
+       AND member='colli_v1_probe_m'::regrole AND set_option AND NOT inherit_option AND NOT admin_option)
+  THEN RAISE EXCEPTION 'Probe membership options rejected'; END IF;
+END;
+$probe$;
+CREATE SCHEMA colli_v1_probe;
+REVOKE ALL ON SCHEMA colli_v1_probe FROM PUBLIC;
+CREATE TABLE colli_v1_probe.t (id integer PRIMARY KEY, value integer NOT NULL);
+GRANT USAGE, CREATE ON SCHEMA colli_v1_probe TO colli_v1_probe_m;
+ALTER TABLE colli_v1_probe.t OWNER TO colli_v1_probe_m;
+ALTER SCHEMA colli_v1_probe OWNER TO colli_v1_probe_m;
+SET LOCAL ROLE colli_v1_probe_m;
+INSERT INTO colli_v1_probe.t VALUES (1,7);
+GRANT USAGE, CREATE ON SCHEMA colli_v1_probe TO colli_v1_probe_o;
+GRANT USAGE ON SCHEMA colli_v1_probe TO colli_v1_probe_a;
+GRANT SELECT (value) ON colli_v1_probe.t TO colli_v1_probe_o;
+CREATE FUNCTION colli_v1_probe.read_value() RETURNS integer LANGUAGE sql SECURITY DEFINER
+SET search_path=pg_catalog,pg_temp SET timezone='UTC'
+AS 'SELECT value FROM colli_v1_probe.t';
+REVOKE ALL ON FUNCTION colli_v1_probe.read_value() FROM PUBLIC;
+ALTER FUNCTION colli_v1_probe.read_value() OWNER TO colli_v1_probe_o;
+REVOKE CREATE ON SCHEMA colli_v1_probe FROM colli_v1_probe_o;
+SET LOCAL ROLE colli_v1_probe_o;
+GRANT EXECUTE ON FUNCTION colli_v1_probe.read_value() TO colli_v1_probe_a;
+SET LOCAL ROLE colli_v1_probe_a;
+DO $probe$
+BEGIN
+  IF colli_v1_probe.read_value() <> 7 THEN RAISE EXCEPTION 'Definer call failed'; END IF;
+  BEGIN
+    PERFORM value FROM colli_v1_probe.t;
+    RAISE EXCEPTION 'Unexpected direct table access';
+  EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+END;
+$probe$;
+RESET ROLE;
+REVOKE colli_v1_probe_o FROM colli_v1_probe_m;
+REVOKE colli_v1_probe_o, colli_v1_probe_m, colli_v1_probe_a FROM CURRENT_USER GRANTED BY CURRENT_USER;
+DO $probe$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_catalog.pg_auth_members
+       WHERE member IN ('colli_v1_probe_m'::regrole,'colli_v1_probe_o'::regrole,'colli_v1_probe_a'::regrole)
+          OR (roleid IN ('colli_v1_probe_m'::regrole,'colli_v1_probe_o'::regrole,'colli_v1_probe_a'::regrole)
+              AND NOT (member=session_user::regrole AND admin_option AND NOT inherit_option AND NOT set_option
+                AND EXISTS (SELECT 1 FROM pg_roles g WHERE g.oid=grantor AND g.rolsuper))))
+     OR (SELECT count(*) FROM pg_auth_members WHERE roleid IN
+          ('colli_v1_probe_m'::regrole,'colli_v1_probe_o'::regrole,'colli_v1_probe_a'::regrole)) <> 3
+  THEN RAISE EXCEPTION 'Probe cleanup capability failed'; END IF;
+  IF (SELECT value FROM colli_v1_probe.t WHERE id=1) <> 7
+  THEN RAISE EXCEPTION 'Independent administrator read capability unavailable'; END IF;
+END;
+$probe$;
+ROLLBACK;
+-- This included check uses the SAME connection after ROLLBACK.
+-- An additional fresh connection must ALSO run probe-absence.psql.
+\ir probe-absence.psql

@@ -1,0 +1,49 @@
+-- PREPARED ONLY. ONE new hosted lineage, ONE transaction, NO automatic retry.
+-- Execute with psql -X -W -f after approval; never paste into an interactive transaction.
+\set ON_ERROR_STOP on
+\set VERBOSITY sqlstate
+\pset pager off
+\if :{?manifest_sha256}
+\else
+  DO $missing$ BEGIN RAISE EXCEPTION 'Missing manifest_sha256' USING ERRCODE='22023'; END; $missing$;
+\endif
+BEGIN ISOLATION LEVEL READ COMMITTED;
+SET LOCAL timezone='UTC';
+SET LOCAL search_path=pg_catalog,public;
+SET LOCAL statement_timeout='10s';
+SET LOCAL lock_timeout='2s';
+SET LOCAL idle_in_transaction_session_timeout='15s';
+\ir connection-guard.psql
+SELECT set_config('colli.hosted_bootstrap','v1',true),
+       set_config('colli.manifest_sha256', :'manifest_sha256', true);
+DO $guard$
+BEGIN
+  IF current_setting('colli.manifest_sha256') !~ '^[a-f0-9]{64}$'
+  THEN RAISE EXCEPTION 'Verified manifest hash required'; END IF;
+END;
+$guard$;
+SELECT pg_advisory_xact_lock(1129270348,90);
+\ir 01-roles.sql
+RESET ROLE;
+INSERT INTO colli_hosted_migrations.journal(phase,lineage,artifact_sha256,manifest_sha256)
+VALUES ('hosted-v1-roles','colli-hosted-v1','a2ed14b3f266bdfef4addf8c9317191f075d073b6d63e573ba029d019b9f1613',current_setting('colli.manifest_sha256'));
+\ir 02-schema.sql
+RESET ROLE;
+INSERT INTO colli_hosted_migrations.journal(phase,lineage,artifact_sha256,manifest_sha256)
+VALUES ('hosted-v1-schema','colli-hosted-v1','d72837aef9d86b9dd3245b6161d20173ea3cbfb8080f8c5d7a547e4c801b0946',current_setting('colli.manifest_sha256'));
+\ir 03-runtime-grants.sql
+RESET ROLE;
+INSERT INTO colli_hosted_migrations.journal(phase,lineage,artifact_sha256,manifest_sha256)
+VALUES ('hosted-v1-runtime-grants','colli-hosted-v1','f0f94771746918007e5d211d1e8890ee575f47a781691bf1247732d5854fad05',current_setting('colli.manifest_sha256'));
+\ir 04-auth-limits.sql
+RESET ROLE;
+INSERT INTO colli_hosted_migrations.journal(phase,lineage,artifact_sha256,manifest_sha256)
+VALUES ('hosted-v1-auth-limits','colli-hosted-v1','c3f9ad3956b2b78a7c9337c4b4f980132193acd9746e9576c00a699d9f92593a',current_setting('colli.manifest_sha256'));
+\ir 05-membership-cleanup.sql
+RESET ROLE;
+INSERT INTO colli_hosted_migrations.journal(phase,lineage,artifact_sha256,manifest_sha256)
+VALUES ('hosted-v1-membership-cleanup','colli-hosted-v1','611abd0808c029d8a8fbdb1edee46d3a1ec4fa69b8742062002cbf722b0e9588',current_setting('colli.manifest_sha256'));
+\ir assert-installed.sql
+\ir assert-journal.sql
+COMMIT;
+SELECT 'hosted_bootstrap_committed_requires_independent_verification' AS result;

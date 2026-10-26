@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "provenance": { "kind": "synthetic", "importId": "demo-incomplete", "label": "Synthetic incomplete demonstration; unknown coverage and costs" },
+  "sourceIds": ["demo-export"],
+  "periods": {
+    "previous": { "start": "2026-10-19T00:00:00Z", "end": "2026-10-20T00:00:00Z", "coverage": "unknown" },
+    "current": { "start": "2026-10-20T00:00:00Z", "end": "2026-10-21T00:00:00Z", "coverage": "partial" }
+  },
+  "records": [
+    { "sourceId": "demo-export", "provider": "openai", "eventId": "incomplete-1", "timestamp": "2026-10-20T12:00:00Z", "inputTokens": 100 }
+  ]
+}

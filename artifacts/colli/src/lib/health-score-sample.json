@@ -1,0 +1,52 @@
+{
+  "disclosure": "Hypothetical 30-day scoring example — not the Daily Brief, a user account or connected-provider telemetry",
+  "period": {
+    "start": "2026-09-01T00:00:00.000Z",
+    "end": "2026-10-01T00:00:00.000Z"
+  },
+  "currency": "USD",
+  "result": {
+    "status": "illustrative",
+    "label": "Hypothetical synthetic score",
+    "score": 86,
+    "weightedTotal": 86,
+    "components": [
+      {
+        "dimension": "fit",
+        "evidenceRef": "hypothetical-needs-register",
+        "numerator": 9,
+        "denominator": 10,
+        "subscore": 90,
+        "weight": 0.35,
+        "contribution": 31.5
+      },
+      {
+        "dimension": "spend",
+        "evidenceRef": "hypothetical-spending-allocation",
+        "numerator": 9000,
+        "denominator": 12000,
+        "subscore": 75,
+        "weight": 0.3,
+        "contribution": 22.5
+      },
+      {
+        "dimension": "reliability",
+        "evidenceRef": "hypothetical-request-log",
+        "numerator": 96,
+        "denominator": 100,
+        "subscore": 96,
+        "weight": 0.25,
+        "contribution": 24
+      },
+      {
+        "dimension": "continuity",
+        "evidenceRef": "hypothetical-workflow-checks",
+        "numerator": 4,
+        "denominator": 5,
+        "subscore": 80,
+        "weight": 0.1,
+        "contribution": 8
+      }
+    ]
+  }
+}

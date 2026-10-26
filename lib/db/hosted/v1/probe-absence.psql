@@ -1,0 +1,18 @@
+\set ON_ERROR_STOP on
+\set VERBOSITY sqlstate
+BEGIN READ ONLY;
+SET LOCAL statement_timeout='3s';
+\ir connection-guard.psql
+SELECT set_config('colli.probe_baseline', :'probe_baseline_sha', true);
+DO $probe$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE rolname IN ('colli_v1_probe_m','colli_v1_probe_o','colli_v1_probe_a'))
+     OR EXISTS (SELECT 1 FROM pg_catalog.pg_namespace WHERE nspname='colli_v1_probe')
+     OR current_setting('colli.probe_baseline') IS DISTINCT FROM md5(jsonb_build_array(
+       (SELECT datacl::text FROM pg_database WHERE datname=current_database()),
+       (SELECT nspacl::text FROM pg_namespace WHERE nspname='public'))::text)
+  THEN RAISE EXCEPTION 'Probe restoration NOT verified'; END IF;
+END;
+$probe$;
+SELECT 'probe_absence_verified' AS result;
+ROLLBACK;

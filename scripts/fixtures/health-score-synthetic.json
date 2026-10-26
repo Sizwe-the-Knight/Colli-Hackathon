@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "provenance": {
+    "kind": "synthetic",
+    "label": "Hypothetical 30-day scoring example — not the Daily Brief, a user account or connected-provider telemetry"
+  },
+  "period": { "start": "2026-09-01T00:00:00.000Z", "end": "2026-10-01T00:00:00.000Z" },
+  "sources": [
+    { "id": "hypothetical-needs-register", "description": "Complete invented register of 10 distinct, equally weighted declared AI needs for this period. Nine meet their predefined acceptance criteria; one does not." },
+    { "id": "hypothetical-spending-allocation", "description": "Complete invented single-currency period ledger: USD 120 paid; USD 90 allocated once to documented meaningful use. Meaningful means completing a declared need or a documented task, not merely a login. The other USD 30 is unsupported by this scenario's usage evidence, not a proven saving or cancellation recommendation." },
+    { "id": "hypothetical-request-log", "description": "Complete invented log of 100 AI requests in the same period: 96 successful, four unsuccessful, no unknown outcomes. Every request, including a retry if present, is counted once." },
+    { "id": "hypothetical-workflow-checks", "description": "Complete invented register of five declared critical workflows. Four have a tested, accessible fallback capable of meeting their minimum task requirements under the specified primary-failure scenario; one does not. Another provider account alone does not establish usable fallback." }
+  ],
+  "fit": { "coverage": "complete", "evidenceRef": "hypothetical-needs-register", "declaredNeeds": 10, "metNeeds": 9 },
+  "spend": { "coverage": "complete", "evidenceRef": "hypothetical-spending-allocation", "currency": "USD", "paidCents": 12000, "meaningfulUseCents": 9000 },
+  "reliability": { "coverage": "complete", "evidenceRef": "hypothetical-request-log", "requests": 100, "successfulRequests": 96 },
+  "continuity": { "coverage": "complete", "evidenceRef": "hypothetical-workflow-checks", "criticalWorkflows": 5, "coveredWorkflows": 4 }
+}

@@ -1,0 +1,187 @@
+{
+  "lineage": "colli-hosted-v1",
+  "status": "prepared-not-executed",
+  "sourceCommit": "d2e406ef366437b0e5074411bfb9fdb221f5cf0d",
+  "postgresMajor": 17,
+  "target": {
+    "project": "colli-hackathon",
+    "branch": "production",
+    "database": "neondb",
+    "region": "AWS Frankfurt",
+    "plan": "Free"
+  },
+  "historicalLocalMigrationsExecuted": false,
+  "phases": [
+    {
+      "id": "hosted-v1-roles",
+      "file": "01-roles.sql"
+    },
+    {
+      "id": "hosted-v1-schema",
+      "file": "02-schema.sql"
+    },
+    {
+      "id": "hosted-v1-runtime-grants",
+      "file": "03-runtime-grants.sql"
+    },
+    {
+      "id": "hosted-v1-auth-limits",
+      "file": "04-auth-limits.sql"
+    },
+    {
+      "id": "hosted-v1-membership-cleanup",
+      "file": "05-membership-cleanup.sql"
+    }
+  ],
+  "mappings": [
+    {
+      "artifact": "01-roles.sql",
+      "source": "initial role contract and previously out-of-band grants",
+      "change": "Fresh SQL-created roles; no password; one administrator transaction; explicit creator ADMIN-only contract."
+    },
+    {
+      "artifact": "02-schema.sql",
+      "source": "0000,0001,0002 entire SQL and 0003 from first GRANT through end",
+      "change": "Replace local 0003 session-user/provisioning guard for hosted SET LOCAL ROLE. Exact function definitions, owner table grants and transfer retained. Public/auth USAGE split under their actual owners. Narrow original users/sequence grants added explicitly."
+    },
+    {
+      "artifact": "03-runtime-grants.sql",
+      "source": "0004 ownership/excess-ACL guard and four GRANT statements",
+      "change": "Replace localhost/bootstrap/superuser predicates with verified hosted identity. Execute grants under each actual owner; no permission changes."
+    },
+    {
+      "artifact": "04-auth-limits.sql",
+      "source": "0005 table DDL, entire function definition, final ACLs",
+      "change": "Replace local deployment guard. Create function directly as ops under transaction-local temporary schema authority instead of restoring migrator membership. Same final owners and ACLs."
+    },
+    {
+      "artifact": "05-membership-cleanup.sql",
+      "source": "hosted execution choreography",
+      "change": "Remove self-granted administrator SET memberships; retain ONLY three immutable provider-created ADMIN-only rows. No runtime or migrator memberships."
+    }
+  ],
+  "sources": [
+    {
+      "path": "lib/db/drizzle/0000_initial_users.sql",
+      "sha256_utf8_lf": "5ad5c2a56175786f9cf8f1d7d13c7c3a5b7d678352e1903efadaba9de3185de4"
+    },
+    {
+      "path": "lib/db/drizzle/0001_persistent_sessions.sql",
+      "sha256_utf8_lf": "de5215377cab9e2c265adb4dcf87d3028c0c6b8729bbccd0bf1a8e2d19043227"
+    },
+    {
+      "path": "lib/db/drizzle/0002_narrow_registration_insert.sql",
+      "sha256_utf8_lf": "25b0fd44ea708f1c1f9347f9326f8bc478ee6f7e3e688d25dea37d767f45856a"
+    },
+    {
+      "path": "lib/db/drizzle/0003_restricted_session_revocation.sql",
+      "sha256_utf8_lf": "d1e735ca9ea0e8ec09d74e60ed3f24bf787743d030a31d3f2016608e047d974e"
+    },
+    {
+      "path": "lib/db/drizzle/0004_session_runtime_grants.sql",
+      "sha256_utf8_lf": "72f0f67aba45e932244ccb72ecd26aecf5d9314fac5935254557638f5e781dfd"
+    },
+    {
+      "path": "lib/db/drizzle/0005_auth_attempt_limits.sql",
+      "sha256_utf8_lf": "5d46f5d67f3af3fbb4ca142108794af2bb15814c60fd2cfc7d8618307e0b6069"
+    },
+    {
+      "path": "lib/db/drizzle/meta/0000_snapshot.json",
+      "sha256_utf8_lf": "0004a96935ce76b15fb4d30c8c6e2e7c2c6fc9b54ce419b867f3ee0c68680894"
+    },
+    {
+      "path": "lib/db/drizzle/meta/0001_snapshot.json",
+      "sha256_utf8_lf": "d1504a63d9a96409a55f6f475f64d321397b17de0d4df2ebd7c7f3367fc07691"
+    },
+    {
+      "path": "lib/db/drizzle/meta/0002_snapshot.json",
+      "sha256_utf8_lf": "75cd2a50648f804bcb5ee024ff0bea5ba5b93bb8347733e6eea7d7011de70b76"
+    },
+    {
+      "path": "lib/db/drizzle/meta/0003_snapshot.json",
+      "sha256_utf8_lf": "1212a7f7a6bf770a35d17840393a092c8129b4869823de6131af43b9e573704a"
+    },
+    {
+      "path": "lib/db/drizzle/meta/0004_snapshot.json",
+      "sha256_utf8_lf": "c9fd61562e760e8d254f56932e9671d885c468b5b212358640dd9299592fd99c"
+    },
+    {
+      "path": "lib/db/drizzle/meta/0005_snapshot.json",
+      "sha256_utf8_lf": "c15cf85bbfca316d291461a158a08eda0becf30168f17fd4fa2932d30f727e28"
+    },
+    {
+      "path": "lib/db/drizzle/meta/_journal.json",
+      "sha256_utf8_lf": "5564f75be594aeb35d3abcc24826412d643a32ca9573de07110790cd3305eca4"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/session-readiness.ts",
+      "sha256_utf8_lf": "7d5fc9be0ba612645b3ca731f843d2145878d6c3cb6af2abd749f41be9b92f6f"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "lib/db/hosted/v1/.gitattributes",
+      "sha256": "a79691a93b46e49ce460c26ef22afcc03d6eca1e63bf2edbc20e96159510f6c9"
+    },
+    {
+      "path": "lib/db/hosted/v1/01-roles.sql",
+      "sha256": "a2ed14b3f266bdfef4addf8c9317191f075d073b6d63e573ba029d019b9f1613"
+    },
+    {
+      "path": "lib/db/hosted/v1/02-schema.sql",
+      "sha256": "d72837aef9d86b9dd3245b6161d20173ea3cbfb8080f8c5d7a547e4c801b0946"
+    },
+    {
+      "path": "lib/db/hosted/v1/03-runtime-grants.sql",
+      "sha256": "f0f94771746918007e5d211d1e8890ee575f47a781691bf1247732d5854fad05"
+    },
+    {
+      "path": "lib/db/hosted/v1/04-auth-limits.sql",
+      "sha256": "c3f9ad3956b2b78a7c9337c4b4f980132193acd9746e9576c00a699d9f92593a"
+    },
+    {
+      "path": "lib/db/hosted/v1/05-membership-cleanup.sql",
+      "sha256": "611abd0808c029d8a8fbdb1edee46d3a1ec4fa69b8742062002cbf722b0e9588"
+    },
+    {
+      "path": "lib/db/hosted/v1/RUNBOOK.md",
+      "sha256": "62873077d88320d5d455bcf6cb1b0f08eb1dfbbfb82631c513a832a1103120ec"
+    },
+    {
+      "path": "lib/db/hosted/v1/assert-installed.sql",
+      "sha256": "b5a9b10b1c03f98fd062ba4f04a32358e196e68bfba3a511cdea9fb066ab5cc7"
+    },
+    {
+      "path": "lib/db/hosted/v1/assert-journal.sql",
+      "sha256": "39b50dbeb9ffe1c7a77dc9cfea458bf3de89ce2bb0baccc8a6cc837ab5682c49"
+    },
+    {
+      "path": "lib/db/hosted/v1/bootstrap.psql",
+      "sha256": "30f3288a15332f377cb6c388b6d9cde4c8a027daae2b4bc136570742f04a7315"
+    },
+    {
+      "path": "lib/db/hosted/v1/connection-guard.psql",
+      "sha256": "b157e98fdb7e57296eb33ec9a5d5e730a18fb1402dbfeb4d08993153e8d0b0ef"
+    },
+    {
+      "path": "lib/db/hosted/v1/probe-absence.psql",
+      "sha256": "570f8987a7f4f409966cfbca5137a64fad0743d279e799e3fe94b8444ad98dad"
+    },
+    {
+      "path": "lib/db/hosted/v1/probe.psql",
+      "sha256": "83002b3f37ec6d723d880b89d43588f49669715583acb6d3a531a8a4afa6b3fc"
+    },
+    {
+      "path": "lib/db/hosted/v1/runtime-readiness.psql",
+      "sha256": "73f99a41108065b74b2a152bb3d407f7775c21c7a7c538826852cfcd3998261f"
+    },
+    {
+      "path": "lib/db/hosted/v1/verify-artifacts.mjs",
+      "sha256": "8839fcaa0c489274c2400f9a006de1e1c22b7100b2e7fdaef02d2f478b643537"
+    },
+    {
+      "path": "lib/db/hosted/v1/verify.psql",
+      "sha256": "2317d6798b114c8c29a94fd219e0fd4d3e3567bd32bd3bb4973e4cad517474c3"
+    }
+  ]
+}

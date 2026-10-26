@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": false,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "types": [],
+    "paths": {
+      "express": ["../artifacts/api-server/node_modules/@types/express"],
+      "express-session": ["../artifacts/api-server/node_modules/@types/express-session"],
+      "connect-pg-simple": ["../artifacts/api-server/node_modules/@types/connect-pg-simple"],
+      "pg": ["../lib/db/node_modules/@types/pg"]
+    }
+  },
+  "files": ["session-store-compatibility.ts"]
+}

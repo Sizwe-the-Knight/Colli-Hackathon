@@ -1,0 +1,8 @@
+.dashboard-polish{color:var(--colli-espresso)}
+.dashboard-demo{border-left:3px solid var(--colli-brass);padding:10px 16px;background:#edf4f6;font-size:13px;line-height:1.6;color:#536b70}
+.dashboard-polish .card-lift:hover{transform:none}
+.dashboard-polish .grid .p-8{padding:24px;min-height:152px}
+.dashboard-polish .grid h3{font-variant-numeric:tabular-nums;color:var(--colli-espresso)!important}
+.dashboard-polish .grid{align-items:stretch}
+.dashboard-polish .grid .relative.bg-white{height:100%;box-shadow:none!important;border-radius:12px!important;background:#fcfbf6}
+.dashboard-polish button:focus-visible,.dashboard-polish a:focus-visible{outline:2px solid var(--colli-teal);outline-offset:4px}

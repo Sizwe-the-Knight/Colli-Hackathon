@@ -1,0 +1,40 @@
+-- Included only after BEGIN by the reviewed entry points. No password variables.
+-- Under psql -f, ON_ERROR_STOP exits with status 3 and terminates all included scripts.
+\set ON_ERROR_STOP on
+\if :{?expected_admin}
+\else
+  DO $missing$ BEGIN RAISE EXCEPTION 'Missing expected_admin' USING ERRCODE='22023'; END; $missing$;
+\endif
+\if :{?expected_host}
+\else
+  DO $missing$ BEGIN RAISE EXCEPTION 'Missing expected_host' USING ERRCODE='22023'; END; $missing$;
+\endif
+-- getenv leaves its target unchanged when the environment variable is absent.
+\unset tls_mode
+\getenv tls_mode PGSSLMODE
+\if :{?tls_mode}
+\else
+  DO $missing$ BEGIN RAISE EXCEPTION 'Missing PGSSLMODE' USING ERRCODE='22023'; END; $missing$;
+\endif
+SELECT set_config('colli.expected_admin', :'expected_admin', true),
+       set_config('colli.expected_host', :'expected_host', true),
+       set_config('colli.client_host', :'HOST', true),
+       set_config('colli.client_port', :'PORT', true),
+       set_config('colli.tls_mode', :'tls_mode', true);
+DO $guard$
+BEGIN
+  IF current_user <> session_user
+     OR session_user <> current_setting('colli.expected_admin')
+     OR session_user IN ('colli_app','colli_migrator','colli_auth_ops')
+     OR current_database() <> 'neondb'
+     OR current_setting('server_version_num')::integer NOT BETWEEN 170000 AND 179999
+     OR current_setting('colli.client_host') <> current_setting('colli.expected_host')
+     OR current_setting('colli.expected_host') !~ '^ep-[a-z0-9-]+\.[a-z0-9.-]+\.neon\.tech$'
+     OR current_setting('colli.expected_host') LIKE '%-pooler.%'
+     OR current_setting('colli.client_port') <> '5432'
+     OR current_setting('colli.tls_mode') <> 'verify-full'
+     OR NOT EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE rolname=current_user AND rolcanlogin AND rolcreaterole)
+     OR NOT pg_catalog.has_database_privilege(current_user,current_database(),'CREATE')
+  THEN RAISE EXCEPTION 'Hosted connection identity/capability rejected'; END IF;
+END;
+$guard$;

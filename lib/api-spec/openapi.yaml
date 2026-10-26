@@ -1,0 +1,509 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: Colli Executive AI Operating System API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication
+  - name: dashboard
+    description: Executive dashboard
+  - name: models
+    description: AI model management
+  - name: workflows
+    description: Workflow and agent management
+  - name: activity
+    description: Recent changes and activity
+  - name: recommendations
+    description: Executive recommendations
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get executive dashboard summary
+      description: Returns the full executive brief, health score, and top-level metrics
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/health-score:
+    get:
+      operationId: getHealthScore
+      tags: [dashboard]
+      summary: Get AI ecosystem health score
+      responses:
+        "200":
+          description: Health score
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthScore"
+
+  /dashboard/brief:
+    get:
+      operationId: getExecutiveBrief
+      tags: [dashboard]
+      summary: Get daily executive brief
+      responses:
+        "200":
+          description: Executive brief
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExecutiveBrief"
+
+  /models:
+    get:
+      operationId: getModels
+      tags: [models]
+      summary: List all AI model providers
+      responses:
+        "200":
+          description: List of AI models
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AIModel"
+
+  /models/{id}:
+    get:
+      operationId: getModel
+      tags: [models]
+      summary: Get a specific AI model
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: AI model
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AIModel"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /workflows:
+    get:
+      operationId: getWorkflows
+      tags: [workflows]
+      summary: List all workflows and agents
+      responses:
+        "200":
+          description: List of workflows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Workflow"
+
+  /activity/recent-changes:
+    get:
+      operationId: getRecentChanges
+      tags: [activity]
+      summary: Get recent meaningful changes in the AI ecosystem
+      responses:
+        "200":
+          description: Recent changes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RecentChange"
+
+  /recommendations:
+    get:
+      operationId: getRecommendations
+      tags: [recommendations]
+      summary: Get executive recommendations
+      responses:
+        "200":
+          description: Recommendations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Recommendation"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+      required:
+        - success
+
+    RegisterInput:
+      type: object
+      required: [email, password, name]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+          minLength: 15
+        name:
+          type: string
+          minLength: 1
+
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    AuthUser:
+      type: object
+      required: [id, email, name]
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    DashboardSummary:
+      type: object
+      required: [healthScore, brief, metrics]
+      properties:
+        healthScore:
+          $ref: "#/components/schemas/HealthScore"
+        brief:
+          $ref: "#/components/schemas/ExecutiveBrief"
+        metrics:
+          $ref: "#/components/schemas/ExecutiveMetrics"
+
+    HealthScore:
+      type: object
+      required: [score, status, label, change]
+      properties:
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+        previousScore:
+          type: integer
+        status:
+          type: string
+          enum: [healthy, warning, critical]
+        label:
+          type: string
+        change:
+          type: integer
+          description: Change from previous day (positive = improved)
+
+    ExecutiveBrief:
+      type: object
+      required: [date, items]
+      properties:
+        date:
+          type: string
+          format: date
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/BriefItem"
+        summary:
+          type: string
+
+    BriefItem:
+      type: object
+      required: [id, text, type]
+      properties:
+        id:
+          type: string
+        text:
+          type: string
+        type:
+          type: string
+          enum: [positive, negative, neutral, warning, info]
+        detail:
+          type: ["string", "null"]
+
+    ExecutiveMetrics:
+      type: object
+      required: [totalMonthlySpend, estimatedSavings, activeModels, activeWorkflows, totalTokensToday, failedExecutions]
+      properties:
+        totalMonthlySpend:
+          type: number
+        estimatedSavings:
+          type: number
+        activeModels:
+          type: integer
+        activeWorkflows:
+          type: integer
+        totalTokensToday:
+          type: integer
+        failedExecutions:
+          type: integer
+
+    AIModel:
+      type: object
+      required: [id, name, provider, status, connectionStatus]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        provider:
+          type: string
+          enum: [openai, anthropic, google, perplexity, mistral]
+        status:
+          type: string
+          enum: [healthy, warning, inactive, error]
+        connectionStatus:
+          type: string
+          enum: [connected, disconnected, pending]
+        todayUsage:
+          type: ["number", "null"]
+        monthlySpend:
+          type: ["number", "null"]
+        avgLatencyMs:
+          type: ["integer", "null"]
+        tokenUsage:
+          $ref: "#/components/schemas/TokenUsage"
+        trendData:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrendPoint"
+        lastActiveAt:
+          type: ["string", "null"]
+          format: date-time
+        inactiveDays:
+          type: ["integer", "null"]
+
+    TokenUsage:
+      type: object
+      required: [used, limit, percentage]
+      properties:
+        used:
+          type: integer
+        limit:
+          type: integer
+        percentage:
+          type: number
+
+    TrendPoint:
+      type: object
+      required: [date, value]
+      properties:
+        date:
+          type: string
+        value:
+          type: number
+
+    Workflow:
+      type: object
+      required: [id, name, status, executionCount, avgRuntimeMs]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [healthy, warning, error, inactive]
+        executionCount:
+          type: integer
+        failedCount:
+          type: integer
+        avgRuntimeMs:
+          type: integer
+        lastRunAt:
+          type: ["string", "null"]
+          format: date-time
+        provider:
+          type: ["string", "null"]
+
+    RecentChange:
+      type: object
+      required: [id, text, type, timestamp]
+      properties:
+        id:
+          type: string
+        text:
+          type: string
+        type:
+          type: string
+          enum: [improvement, decline, warning, info, alert]
+        timestamp:
+          type: string
+          format: date-time
+        provider:
+          type: ["string", "null"]
+        detail:
+          type: ["string", "null"]
+
+    Recommendation:
+      type: object
+      required: [id, title, description, priority, estimatedSavings]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        priority:
+          type: string
+          enum: [high, medium, low]
+        estimatedSavings:
+          type: ["number", "null"]
+        category:
+          type: string
+          enum: [cost, performance, security, optimization]
+        actionLabel:
+          type: ["string", "null"]

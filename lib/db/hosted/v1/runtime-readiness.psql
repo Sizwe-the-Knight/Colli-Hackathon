@@ -1,0 +1,100 @@
+-- AFTER bootstrap acceptance and separate private password setup. Fresh colli_app connection.
+\set ON_ERROR_STOP on
+\set VERBOSITY sqlstate
+BEGIN READ ONLY;
+SET LOCAL timezone='UTC';
+SET LOCAL statement_timeout='3s';
+-- Do not let a stale psql variable conceal an absent client TLS setting.
+\unset tls_mode
+\getenv tls_mode PGSSLMODE
+SELECT set_config('colli.expected_host', :'expected_host', true),
+       set_config('colli.client_host', :'HOST', true),
+       set_config('colli.client_port', :'PORT', true),
+       set_config('colli.tls_mode', :'tls_mode', true);
+DO $readiness$
+DECLARE r record;
+BEGIN
+  IF current_database()<>'neondb' OR current_user<>'colli_app' OR session_user<>'colli_app'
+     OR current_setting('colli.client_host')<>current_setting('colli.expected_host')
+     OR current_setting('colli.expected_host') !~ '^ep-[a-z0-9-]+\.[a-z0-9.-]+\.neon\.tech$'
+     OR current_setting('colli.expected_host') LIKE '%-pooler.%'
+     OR current_setting('colli.client_port')<>'5432'
+     OR current_setting('colli.tls_mode')<>'verify-full'
+     OR current_setting('server_version_num')::integer NOT BETWEEN 170000 AND 179999
+  THEN RAISE EXCEPTION 'Runtime identity rejected'; END IF;
+  EXECUTE $query$WITH required_columns(relation, col, privilege) AS (VALUES
+  ('public.users','id','SELECT'), ('public.users','auth_version','SELECT'),
+  ('public.users','email','INSERT'), ('public.users','name','INSERT'), ('public.users','password_hash','INSERT'),
+  ('public.users','providers','UPDATE'), ('public.users','updated_at','UPDATE'),
+  ('auth.sessions','sid','INSERT'), ('auth.sessions','sess','INSERT'), ('auth.sessions','expire','INSERT'),
+  ('auth.sessions','sess','UPDATE'), ('auth.sessions','expire','UPDATE'),
+  ('auth.revoked_sessions','sid','SELECT'), ('auth.revoked_sessions','retain_until','SELECT')
+), forbidden_columns(relation, col, privilege) AS (VALUES
+  ('public.users','id','INSERT'), ('public.users','auth_version','INSERT'),
+  ('public.users','providers','INSERT'), ('public.users','created_at','INSERT'), ('public.users','updated_at','INSERT'),
+  ('public.users','id','UPDATE'), ('public.users','email','UPDATE'), ('public.users','name','UPDATE'),
+  ('public.users','password_hash','UPDATE'), ('public.users','auth_version','UPDATE'), ('public.users','created_at','UPDATE'),
+  ('auth.sessions','sid','UPDATE'), ('auth.revoked_sessions','revoked_at','SELECT')
+), expected_functions(signature, definer, runtime_allowed) AS (VALUES
+  ('auth.revoke_current_session(text)',true,true), ('auth.revoke_all_sessions(text)',true,true),
+  ('auth.cleanup_revoked_sessions()',true,true), ('auth._revoke_session(text,boolean)',false,false),
+  ('auth._session_identity(json,timestamp,timestamptz)',false,false)
+)
+SELECT
+  EXISTS (SELECT 1 FROM pg_catalog.pg_proc p
+    WHERE p.oid=to_regprocedure('auth.consume_auth_attempt(text,text)')
+      AND p.proowner='colli_auth_ops'::regrole AND p.prosecdef
+      AND has_function_privilege(current_user,p.oid,'EXECUTE')
+      AND NOT has_function_privilege(current_user,p.oid,'EXECUTE WITH GRANT OPTION')
+      AND EXISTS (SELECT 1 FROM unnest(p.proconfig) c WHERE lower(c)='timezone=utc')
+      AND EXISTS (SELECT 1 FROM unnest(p.proconfig) c WHERE replace(lower(c),' ','')='search_path=pg_catalog,pg_temp')
+      AND NOT EXISTS (SELECT 1 FROM aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a WHERE a.grantee=0))
+    AND EXISTS (SELECT 1 FROM pg_catalog.pg_class WHERE oid=to_regclass('auth.auth_attempts') AND relowner='colli_migrator'::regrole)
+    AND has_table_privilege('colli_auth_ops','auth.auth_attempts','SELECT')
+    AND has_table_privilege('colli_auth_ops','auth.auth_attempts','INSERT')
+    AND has_table_privilege('colli_auth_ops','auth.auth_attempts','UPDATE')
+    AND has_table_privilege('colli_auth_ops','auth.auth_attempts','DELETE')
+    AND NOT has_schema_privilege('colli_auth_ops','auth','CREATE')
+    AND NOT has_table_privilege(current_user,'auth.auth_attempts','SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER')
+    AND NOT has_any_column_privilege(current_user,'auth.auth_attempts','SELECT,INSERT,UPDATE,REFERENCES') AS auth_limits_ok,
+  current_user = 'colli_app' AND session_user = 'colli_app'
+    AND EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = current_user
+      AND NOT rolsuper AND NOT rolcreatedb AND NOT rolcreaterole AND NOT rolreplication AND NOT rolbypassrls)
+    AND NOT EXISTS (SELECT 1 FROM pg_catalog.pg_auth_members WHERE member = current_user::regrole) AS identity_ok,
+  current_setting('TimeZone') = 'UTC' AS utc_ok,
+  has_schema_privilege(current_user,'auth','USAGE')
+    AND has_table_privilege(current_user,'public.users','SELECT')
+    AND has_table_privilege(current_user,'auth.sessions','SELECT')
+    AND has_table_privilege(current_user,'auth.sessions','DELETE')
+    AND has_sequence_privilege(current_user,pg_get_serial_sequence('public.users','id'),'USAGE')
+    AND NOT EXISTS (SELECT 1 FROM required_columns WHERE NOT has_column_privilege(current_user,relation,col,privilege)) AS required_ok,
+  NOT has_schema_privilege(current_user,'auth','CREATE') AND NOT has_schema_privilege(current_user,'public','CREATE')
+    AND NOT EXISTS (SELECT 1 FROM forbidden_columns WHERE has_column_privilege(current_user,relation,col,privilege))
+    AND NOT has_table_privilege(current_user,'public.users','DELETE,TRUNCATE,REFERENCES,TRIGGER')
+    AND NOT has_table_privilege(current_user,'auth.sessions','TRUNCATE,REFERENCES,TRIGGER')
+    AND NOT has_table_privilege(current_user,'auth.revoked_sessions','DELETE,TRUNCATE,REFERENCES,TRIGGER')
+    AND NOT has_any_column_privilege(current_user,'auth.revoked_sessions','INSERT,UPDATE')
+    AND NOT EXISTS (SELECT 1 FROM required_columns WHERE has_column_privilege(current_user,relation,col,privilege || ' WITH GRANT OPTION'))
+    AND NOT has_table_privilege(current_user,'auth.sessions','SELECT WITH GRANT OPTION,DELETE WITH GRANT OPTION') AS restricted_ok,
+  (SELECT count(*) = 5 AND bool_and(p.proowner = 'colli_auth_ops'::regrole AND p.prosecdef = f.definer
+    AND has_function_privilege(current_user,p.oid,'EXECUTE') = f.runtime_allowed
+    AND NOT has_function_privilege(current_user,p.oid,'EXECUTE WITH GRANT OPTION')
+    AND EXISTS (SELECT 1 FROM unnest(p.proconfig) AS config WHERE lower(config) = 'timezone=utc')
+    AND EXISTS (SELECT 1 FROM unnest(p.proconfig) AS config WHERE replace(lower(config),' ','') = 'search_path=pg_catalog,pg_temp')
+    AND NOT EXISTS (SELECT 1 FROM aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a WHERE a.grantee = 0))
+   FROM expected_functions f JOIN pg_catalog.pg_proc p ON p.oid = to_regprocedure(f.signature)) AS functions_ok,
+  (SELECT count(*) = 3 AND bool_and(a.attnotnull AND
+     ((a.attname = 'sid' AND a.atttypid = 'varchar'::regtype)
+      OR (a.attname = 'sess' AND a.atttypid = 'json'::regtype)
+      OR (a.attname = 'expire' AND a.atttypid = 'timestamp'::regtype AND a.atttypmod = 6)))
+   FROM pg_catalog.pg_attribute a WHERE a.attrelid = 'auth.sessions'::regclass
+     AND a.attnum > 0 AND NOT a.attisdropped) AND EXISTS (
+       SELECT 1 FROM pg_catalog.pg_constraint c JOIN pg_catalog.pg_attribute a
+       ON a.attrelid = c.conrelid AND a.attname = 'sid'
+       WHERE c.conrelid = 'auth.sessions'::regclass AND c.contype = 'p' AND c.conkey = ARRAY[a.attnum]) AS schema_ok$query$ INTO r;
+  IF (r.identity_ok AND r.utc_ok AND r.required_ok AND r.restricted_ok AND r.functions_ok AND r.schema_ok AND r.auth_limits_ok) IS DISTINCT FROM true
+  THEN RAISE EXCEPTION 'Runtime readiness rejected'; END IF;
+END;
+$readiness$;
+SELECT 'runtime_readiness_verified' AS result;
+ROLLBACK;
