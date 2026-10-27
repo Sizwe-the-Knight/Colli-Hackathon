@@ -9,6 +9,7 @@ const compiled=await require('esbuild').build({stdin:{contents:`
  export * from './artifacts/api-server/src/operational/narration-postgres';
  export * from './artifacts/api-server/src/operational/narration-contract';
  export * from './artifacts/api-server/src/operational/usage';
+ export * from './artifacts/api-server/src/operational/demo-scenario';
  `,resolveDir:root},bundle:true,write:false,platform:'node',format:'cjs'});
 const filename=path.join(root,'tests/narration-postgres-compiled.cjs'),mod=new Module(filename);
 mod._compile(compiled.outputFiles[0].text,filename);const api=mod.exports;
@@ -133,4 +134,22 @@ test('prepared SQL enforces durable limits, atomic reservations and least privil
  assert.ok(sql.indexOf('GRANT CREATE ON SCHEMA auth')<sql.indexOf('SET LOCAL ROLE colli_auth_ops'));
  const includes=[...apply.matchAll(/^\\ir (.+)$/gm)].map(m=>m[1].trim());
  for(const include of includes)assert.ok(fs.existsSync(path.resolve('lib/db/hosted/narration-v1',include)),include);
+});
+
+test('changing selected examples cannot reset durable per-account quotas; reordered selection reuses cache',async()=>{
+ const db=database();let calls=0;const fetcher=async(_url,o)=>{calls++;return response(valid(o.body));};
+ let n=service(db,fetcher);
+ const first=api.providerDemo(['google','grok']);assert.equal((await n.generate(77,first)).status,'generated');
+ n=service(db,fetcher);assert.equal((await n.generate(77,api.providerDemo(['grok','google','google']))).status,'cached');assert.equal(calls,1);
+ for(const selection of [['openai'],['mistral']])assert.equal((await n.generate(77,api.providerDemo(selection))).status,'generated');
+ assert.equal((await n.generate(77,api.providerDemo(['deepseek']))).status,'budget_exhausted');assert.equal(calls,3);assert.equal(db.records.size,3);
+});
+
+test('prior factual narration remains readable without a fresh request or reservation',async()=>{
+ const db=database(),r=report(),f=api.leadFinding(r),choices=api.previousNarrativeChoices(r,f);
+ const key=api.hash('91:'+api.fingerprint(r));const narrative={findingId:f.id,...Object.fromEntries(api.fields.map(k=>[k,choices[k][0]]))};
+ db.records.set(key,{account:api.hash('91'),judge:false,narrative});
+ const n=service(db,()=>assert.fail('Cached wording must not call provider'));
+ assert.equal((await n.generate(91,r)).status,'cached');assert.equal(db.records.size,1);
+ assert.ok(db.calls.every(c=>!c.sql.includes('reserve_narration')));
 });

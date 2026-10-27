@@ -14,7 +14,7 @@ The founder has verified hosted registration, onboarding, Brief/Dashboard naviga
 | --- | --- |
 | Account access | Registration/sign-in, PostgreSQL-backed sessions, provider preference saving and current-session logout. Server also implements all-device revocation. |
 | Daily Executive Brief | Deterministic findings, plain-language explanation and next step; short reduced-motion-aware reveal; Continue to Dashboard. |
-| Operational processing | Validates structured records, keeps currencies separate, checks coverage and ties findings to evidence. The live route uses a bundled synthetic report. |
+| Operational processing | Validates structured records, keeps currencies separate, checks coverage and ties findings to evidence. The live route calculates stable synthetic examples for saved provider selections; it imports no provider activity. |
 | Dashboard/sidebar | Models, Activity, Workflows, Costs and Reports demonstrate the interface using sample metrics. They are not live provider analytics. |
 | AI Health Score | The labelled demo immediately shows a separate **Illustrative 86/100**; **How this score is calculated** expands its four evidence ratios. The actual account remains **Not assessed**. It is not a score for the Brief’s requests. Dashboard sample scores are also illustrative. |
 | Provider selections | Saved preferences only: no account connection, subscription verification or private activity import. |
@@ -29,7 +29,7 @@ The implemented server-side `BriefNarrator` uses `nvidia/Nemotron-3_5-Lightning`
 
 **A controlled genuine acceptance succeeded:** HTTP 200, 439 input / 139 output tokens, `finish_reason: stop`, with Colli validation passed and no fallback. An earlier truncated response was correctly rejected. The founder subsequently confirmed genuine narration working in the hosted beta. This release-package session made no inference request and does not deploy changes.
 
-Authenticated users select **Explain with NVIDIA Nemotron** in the Daily Brief. Only the fixed synthetic demonstration findings are sent to Nebius—not account details or selected providers. Successful output is attributed to NVIDIA Nemotron via Nebius; otherwise the deterministic explanation remains. There is no inference on login, page load, refresh or navigation, and no automatic retry.
+Authenticated users select **Explain with NVIDIA Nemotron** in the Daily Brief. Only bounded synthetic demonstration findings are sent to Nebius—not personal account details or private activity. Example provider names reflect saved selections. Successful output is attributed to NVIDIA Nemotron via Nebius; otherwise the deterministic explanation remains. There is no inference on login, page load, refresh or navigation, and no automatic retry.
 
 Hosted generation uses PostgreSQL reservations and validated-result reuse across restarts: **100 total attempts, 3 per account**, 8,704 tokens reserved per attempt and 512 maximum output tokens. Public accounts can consume at most 80 attempts; 20 are reserved for server-designated judge accounts. There is no date-based reset or October expiry. An unchanged account/report reuses its result without spending again. Failed attempts count. New installations must complete the [hosted activation steps](lib/db/hosted/narration-v1/README.md) before enabling generation. Historical local acceptance reservations remain separate and unchanged; these are 100 additional hosted demo attempts, not unlimited credit usage.
 

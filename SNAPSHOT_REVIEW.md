@@ -167,3 +167,28 @@ independent history after approval, never merge the private repository's history
 Ignored node_modules, builds and local preview/test files are not release contents.
 The older snapshot ZIP still represents the initial root; use this new commit for
 the promoted release rather than uploading that older ZIP.
+
+## Provider-matched experience correction — 27 October 2026
+
+Source-only promotion of private commit bab5482d7aeb32ef88b0d528e99570f56abb2a6e
+onto public parent da81b7702a17cf54f4c1290a2c41bd38547c7465. No private Git history
+was imported. Sixteen approved source/test/documentation files changed.
+
+Saved preferences now select stable versioned example records; facts and narration
+share the engine output. Reordered selections reuse the same identity, and changed
+scenarios remain subject to unchanged account/global quotas. Previous accepted
+wording remains readable without a new attempt. Names in synthetic explanations
+may reflect saved choices; the raw preference list and personal details are not
+sent. The disclosure and documentation reflect this distinction.
+
+Both repositories passed 199 focused offline tests (zero failures/skips), full
+TypeScript checks and frontend/backend production builds. Frontend JS/CSS match.
+Existing sourcemap/large-bundle warnings remain. Tests use mocks, not live inference
+or database execution. New hosted behavior and model output remain unverified.
+The separate illustrative 86/100 and real-account Not assessed state are preserved.
+
+All transferred executable files match the private source. Every unrelated file
+matched the preceding snapshot manifest before this evidence refresh. No detected
+credential/personal-path patterns in the changed files. License notices, excluded
+materials and independent public history are preserved. The refreshed inventory
+contains 281 files including its self-excluded manifest. No push or deployment.

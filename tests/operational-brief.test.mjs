@@ -10,6 +10,7 @@ const result=await build({stdin:{contents:`
  import {BriefContent} from './artifacts/colli/src/pages/brief';
  export * from './artifacts/colli/src/lib/operational-brief';
  export * from './artifacts/api-server/src/operational/usage';
+ export * from './artifacts/api-server/src/operational/demo-scenario';
  export * from './lib/api-client-react/src/operational-brief';
  export {default as routes} from './artifacts/api-server/src/routes';
  export {narrationRoutes} from './artifacts/api-server/src/routes/operational-brief';
@@ -18,15 +19,17 @@ const result=await build({stdin:{contents:`
  `,resolveDir:root,loader:'tsx'},bundle:true,write:false,platform:'node',format:'cjs',jsx:'transform',loader:{'.css':'empty'},
  nodePaths:[path.join(root,'artifacts/colli/node_modules')],plugins:[{name:'integration-isolation',setup(b){
  b.onResolve({filter:/^@workspace\/db$/},()=>({path:'db',namespace:'test'}));
- b.onLoad({filter:/^db$/,namespace:'test'},()=>({contents:'export const pool={query(){throw new Error("Offline test cannot query database")}};'}));
+ b.onLoad({filter:/^db$/,namespace:'test'},()=>({contents:'import {control} from "control"; export const pool={async query(sql,params){if(control.dbError)throw new Error("Offline failure");control.account=params[0];return {rows:[{providers:control.providers??null}]}}};'}));
  b.onResolve({filter:/^control$/},()=>({path:'control',namespace:'test'}));
  b.onLoad({filter:/^control$/,namespace:'test'},()=>({contents:'export const control={status:401,calls:0};'}));
  b.onResolve({filter:/^\.\//},a=>a.importer.replaceAll('\\','/').endsWith('/routes/index.ts')&&a.path!=='./operational-brief'?{path:'empty-router',namespace:'test'}:undefined);
  b.onLoad({filter:/^empty-router$/,namespace:'test'},()=>({contents:"import {Router} from 'express';export default Router();",resolveDir:path.join(root,'artifacts/api-server')}));
  b.onResolve({filter:/^\.\.\/lib\/security$/},()=>({path:'security',namespace:'test'}));
- b.onLoad({filter:/^security$/,namespace:'test'},()=>({contents:"import {control} from 'control';export function requireAuth(req,res,next){control.calls++;if(control.status!==200)return res.status(control.status).json({error:'Not available'});next()}"}));
+ b.onLoad({filter:/^security$/,namespace:'test'},()=>({contents:"import {control} from 'control';export function requireAuth(req,res,next){control.calls++;if(control.status!==200)return res.status(control.status).json({error:'Not available'});req.session={userId:42};next()}"}));
  b.onResolve({filter:/^wouter$/},()=>({path:'wouter',namespace:'test'}));
  b.onLoad({filter:/^wouter$/,namespace:'test'},()=>({contents:"import React from 'react';export const Link=({children,...props})=>React.createElement('a',props,children);",resolveDir:path.join(root,'artifacts/colli')}));
+ b.onResolve({filter:/^@\/lib\/context$/},()=>({path:'context',namespace:'test'}));
+ b.onLoad({filter:/^context$/,namespace:'test'},()=>({contents:"export const useAppContext=()=>({user:null});"}));
  b.onResolve({filter:/^@\//},a=>({path:path.join(root,'artifacts/colli/src',a.path.slice(2)+(a.path.includes('components/')?'.tsx':'.ts'))}));
  }}]});
 const mod=new Module(path.join(root,'tests/brief-compiled.cjs'));mod.paths=Module._nodeModulePaths(root);mod._compile(result.outputFiles[0].text,path.join(root,'tests/brief-compiled.cjs'));
@@ -39,7 +42,7 @@ test('demo totals and the published wire contract come from the existing engine'
  assert.deepEqual(t.costs.map(c=>[c.currency,c.amount]),[['EUR','0.1'],['USD','0.4']]);
  assert.deepEqual(t.outcomes,{success:2,failure:1,unknown:0});
  assert.equal(api.findingHeadline(api.centralFinding(r)),"One AI request failed.");
- const html=api.render(r);assert.match(html,/Demo workspace/);assert.match(html,/AI Health Score/);assert.match(html,/Not assessed/);
+ const html=api.render(r);assert.match(html,/Demo data:/);assert.match(html,/AI Health Score/);assert.match(html,/Not assessed/);
  assert.doesNotMatch(html,/92\/100|exceptionally well|inactive for|Estimated monthly savings|complete cross-provider/);
 });
 test('incomplete coverage withholds comparison and preserves unknown quantities',()=>{
@@ -66,7 +69,7 @@ test('opening summary preserves evidence while prioritizing Dashboard navigation
  assert.match(html,/Why does it matter/);assert.match(html,/What should I do next/);
  assert.doesNotMatch(html,/<table|brief-ledger|brief-findings|href="#evidence-/);
  assert.deepEqual(html.match(/<details[^>]*>/g), ['<details class="health-sample">']);
- assert.match(html,/Invented examples, not connected account activity/);
+ assert.match(html,/Demo data:/);
  assert.doesNotMatch(html,/unfinished AI|AI task didn't finish|Clarity before action/);
  assert.equal(JSON.stringify(r),before);
  const decreased={...lead,change:{...lead.change,previous:3,current:0,delta:-3}};
@@ -84,7 +87,7 @@ test('main finding uses current-period totals and the linked failure provider wi
  assert.doesNotMatch(html,/Claude|lost work|<table/);
  // Sample continuity is legitimately 80/100, inside the separate opt-in fixture.
  // Neither that score nor an invented 95 may appear as the account assessment.
- assert.doesNotMatch(html.replace(/<section class="brief-health brief-health-demo"[\s\S]*?<\/section>/, ''),/95\/100|80\/100|86\/100/);
+ assert.doesNotMatch(html.replace(/<section class="brief-health brief-health-demo"[\s\S]*?<\/section>/, ''),/95\/100|80\/100|<strong>86/);
  assert.equal(JSON.stringify(r),before);
  const changed=structuredClone(r);
  changed.records.find(record=>record.eventId==='c2').provider='openai';
@@ -140,7 +143,7 @@ test('validated narration changes only editorial wording; figures, evidence and 
   narrative:{findingId:finding.id,headline:'More AI attempts did not complete.',whatHappened:'The supplied records show more unsuccessful attempts than in the previous period.',whyItMatters:'An unsuccessful attempt may interrupt someone’s work.',nextStep:'Check the supporting records to understand what happened.'}};
  const narration=api.narrationSchema.parse(value),html=api.render(r,narration);
  assert.match(html,/More AI attempts did not complete/);assert.equal(JSON.stringify(r),before);assert.doesNotMatch(html,/<table|EUR 0.1|USD 0.4/);
- assert.match(html,/Not assessed/);assert.match(html,/Demo workspace/);assert.ok(r.records.some(record=>record.eventId==='c2'));
+ assert.match(html,/Not assessed/);assert.match(html,/Demo data:/);assert.ok(r.records.some(record=>record.eventId==='c2'));
  assert.doesNotMatch(api.render(r,{...narration,findingId:'other'}),/More AI attempts did not complete/);
  assert.equal(api.narrationSchema.safeParse({...value,narrative:null}).success,false);
 });
@@ -175,3 +178,41 @@ if(process.env.COLLI_BRIEF_RENDER_PATH){
  const css=fs.readFileSync('artifacts/colli/src/pages/brief.css','utf8');
  fs.writeFileSync(process.env.COLLI_BRIEF_RENDER_PATH,'<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Colli Brief · static fixture preview</title><style>body{margin:0}*{box-sizing:border-box}:root{--app-font-sans:Arial,sans-serif;--app-font-serif:Georgia,serif}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}'+css+'</style></head><body><div class="executive-brief"><header class="brief-masthead"><strong>Colli</strong></header><main class="brief-main">'+api.render(api.operationalBriefSchema.parse(demo()))+'</main></div></body></html>',{flag:'wx'});
 }
+
+test('provider-matched examples derive all facts from stable selected-service records',()=>{
+ const r=api.providerDemo(['grok','google']),again=api.providerDemo('["google","grok","google"]');
+ assert.deepEqual(r,again);assert.equal(r.provenance.importId,'selected-v1-google-grok');
+ assert.deepEqual([...new Set(r.records.map(v=>v.provider))].sort(),['google','grok']);
+ assert.equal(r.periods.previous.totals.activities,2);assert.equal(r.periods.current.totals.activities,3);
+ assert.deepEqual(r.periods.current.totals.outcomes,{success:2,failure:1,unknown:0});
+ assert.equal(r.records.find(v=>v.outcome==='failure').provider,'google');
+ assert.ok(r.records.every(v=>v.model===null&&v.workflow===null&&v.cost===null));
+ const parsed=api.operationalBriefSchema.parse(r),html=api.render(parsed);
+ assert.match(html,/Gemini couldn&#x27;t complete one request/);assert.doesNotMatch(html,/Anthropic|OpenAI|Claude/);
+ assert.match(html,/Previous period: 0 of 2.*Current period: 1 of 3/);
+ assert.equal((html.match(/Demo data:/g)??[]).length,1);
+ assert.deepEqual(api.providerDemo(['unsupported']),demo());
+ for(const providers of [['grok'],['anthropic','deepseek','google','grok','mistral','openai','perplexity']]) {
+  const report=api.providerDemo(providers);assert.equal(report.periods.current.totals.activities,providers.length+1);
+  assert.equal(report.periods.current.totals.outcomes.failure,1);api.operationalBriefSchema.parse(report);
+ }
+});
+
+test('all Brief routes use saved preferences; stale scenario is rejected and database failures fail closed',async()=>{
+ const express=require('express'),app=express(),seen=[];
+ api.control.providers='["google","grok"]';api.control.status=200;
+ app.use(express.json());app.use((req,res,next)=>{req.session={userId:42};next()});
+ app.use('/api',api.narrationRoutes({readStored:async(id,r)=>{seen.push(r);return {}},generate:async(id,r)=>{seen.push(r);return {}}}));
+ app.use('/api',api.routes);
+ const server=await new Promise(resolve=>{const s=app.listen(0,'127.0.0.1',()=>resolve(s))});
+ try {
+  const base='http://127.0.0.1:'+server.address().port+'/api/operational/brief';
+  const r=await (await fetch(base+'?provider=anthropic')).json();assert.deepEqual(r,api.providerDemo(['google','grok']));assert.equal(api.control.account,42);
+  await fetch(base+'/narration');assert.deepEqual(seen,[r]);
+  const {createHash}=await import('node:crypto');const fp=createHash('sha256').update(JSON.stringify(r)).digest('hex');
+  const post=()=>fetch(base+'/narration',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({fingerprint:fp})});
+  assert.equal((await post()).status,200);assert.deepEqual(seen,[r,r]);
+  api.control.providers='["grok"]';assert.equal((await post()).status,409);assert.equal(seen.length,2);
+  api.control.dbError=true;assert.equal((await fetch(base)).status,500);assert.equal(seen.length,2);
+ } finally {api.control.providers=null;api.control.dbError=false;await new Promise(resolve=>server.close(resolve));}
+});

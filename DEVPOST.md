@@ -14,10 +14,10 @@
    password of at least 15 characters (the backend also limits passwords to 72 UTF-8
    bytes). Do not reuse an important password. No provider keys or payment are needed.
 3. Choose provider preferences during onboarding and save. This does **not** connect
-   external accounts or import your activity.
+   external accounts or import your activity. The Brief uses matching example providers.
 4. Read the Daily Executive Brief: what happened, why it matters and what to do next.
    The short opening reveal is cosmetic; reduced-motion preferences skip it.
-   **Demo workspace** identifies invented records, not connected account activity.
+   One disclosure at the bottom identifies example records, not connected account activity.
    The **Illustrative 86/100** uses a separate 30-day example; your account remains
    **Not assessed**. Select **How this score is calculated** for its four evidence
    ratios. Expanding these details makes no AI call.

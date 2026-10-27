@@ -33,7 +33,7 @@ const compiled=await require('esbuild').build({stdin:{contents:`
   b.onResolve({filter:/^react$/},a=>a.importer.replaceAll('\\','/').endsWith('/pages/brief.tsx')?{path:'hooks',namespace:'fixture'}:undefined);
   b.onLoad({filter:/^hooks$/,namespace:'fixture'},()=>({contents:"import React from 'react';export default React;export {state as useState,ref as useRef,effect as useEffect} from 'presentation-control';",resolveDir:path.join(root,'artifacts/colli')}));
   b.onResolve({filter:/^@tanstack\/react-query$/},()=>({path:'query',namespace:'fixture'}));
-  b.onLoad({filter:/^query$/,namespace:'fixture'},()=>({contents:"import {control} from 'presentation-control';export const useQuery=()=>control.query;"}));
+  b.onLoad({filter:/^query$/,namespace:'fixture'},()=>({contents:"import {control} from 'presentation-control';export const useQuery=options=>{control.queryKey=options.queryKey;return control.query};"}));
   b.onResolve({filter:/^@workspace\/api-client-react$/},()=>({path:'api',namespace:'fixture'}));
   b.onLoad({filter:/^api$/,namespace:'fixture'},()=>({contents:`import {control} from 'presentation-control';
    export const getOperationalBrief=()=>{throw new Error('Unexpected report fetch')};
@@ -41,6 +41,8 @@ const compiled=await require('esbuild').build({stdin:{contents:`
    export const generateBriefNarration=async(fingerprint,signal)=>{control.posts.push({fingerprint,signal});return control.post()};`}));
   b.onResolve({filter:/^wouter$/},()=>({path:'links',namespace:'fixture'}));
   b.onLoad({filter:/^links$/,namespace:'fixture'},()=>({contents:"import React from 'react';export const Link=({children,...props})=>React.createElement('a',props,children);",resolveDir:path.join(root,'artifacts/colli')}));
+  b.onResolve({filter:/^@\/lib\/context$/},()=>({path:'context',namespace:'fixture'}));
+  b.onLoad({filter:/^context$/,namespace:'fixture'},()=>({contents:"import {control} from 'presentation-control';export const useAppContext=()=>({user:control.user??null});"}));
   b.onResolve({filter:/^@\//},a=>({path:path.join(root,'artifacts/colli/src',a.path.slice(2)+(a.path.includes('components/')?'.tsx':'.ts'))}));
  }}]});
 const filename=path.join(root,'tests/brief-presentation-compiled.cjs'),mod=new Module(filename);mod._compile(compiled.outputFiles[0].text,filename);const api=mod.exports;
@@ -59,7 +61,7 @@ test('Health Score is dominant in semantic order; honest state precedes narrativ
  for(let i=1;i<order.length;i++)assert.ok(html.indexOf(order[i-1])<html.indexOf(order[i]),order[i]);
  assert.match(html,/aria-labelledby="brief-health-title" aria-describedby="brief-health-reason"/);
  assert.match(html,/We need more complete information before giving you a score/);
- assert.match(html,/Demo workspace/);assert.doesNotMatch(html,/84\/100|95\/100|role="(?:meter|progressbar)"/);
+ assert.match(html,/Demo data:/);assert.doesNotMatch(html,/84\/100|95\/100|role="(?:meter|progressbar)"/);
  assert.equal(JSON.stringify(report),before);
 });
 test('mount, rerender and cached refresh never generate; cache does not announce a new update',async()=>{
@@ -111,7 +113,7 @@ test('illustrative score is immediately visible only in the demo; calculation is
  assert.deepEqual(html.match(/<details[^>]*>/g),['<details class="health-sample">']);
  assert.ok(html.includes('<summary>How this score is calculated</summary>'));
  assert.match(html,/Illustrative · separate 30-day example/);
- assert.match(html,/This is not your account score/);assert.match(html,/not your account score or a score for the requests below/);
+ assert.match(html,/Your account: <b>Not assessed/);
  assert.ok(html.includes('<strong>86</strong><span>/100</span>'));
  for(const value of ['90/100','75/100','96/100','80/100','9 of 10','$90 of $120','96 of 100','4 of 5'])assert.ok(html.includes(value),value);
  assert.ok(html.indexOf('<strong>86')<html.indexOf('<details'));assert.match(html,/Your account: <b>Not assessed/);
@@ -136,8 +138,8 @@ test('factual headline and comparison remain visible beside AI interpretation, w
  assert.match(html,/Anthropic couldn&#x27;t complete one request/);
  assert.match(html,/Previous period: 0 of 2 AI requests failed. Current period: 1 of 3/);
  assert.ok(html.indexOf('Current period: 1 of 3')<html.indexOf('Nemotron’s explanation'));
- assert.equal((html.match(/Demo workspace/g)??[]).length,1);
- assert.equal((html.match(/not connected account activity/g)??[]).length,1);
+ assert.equal((html.match(/Demo data:/g)??[]).length,1);
+ assert.equal((html.match(/not activity from connected AI accounts/g)??[]).length,1);
  assert.doesNotMatch(html,/An example, not your private account activity|operational metrics are still sample|Based on synthetic demonstration evidence/);
  const real={...report,provenance:{...report.provenance,kind:'user_imported'}};
  const realHtml=api.renderContent({report:real});
@@ -147,12 +149,27 @@ test('factual headline and comparison remain visible beside AI interpretation, w
 
 test('next step refers to displayed comparison, not an invented failed-request screen',()=>{
  const html=api.renderContent({report});
- assert.match(html,/Compare the two periods above/);assert.match(html,/Current period: 1 of 3/);
- assert.match(html,/This demo needs no action on your accounts/);
+ assert.match(html,/Compare the failed counts in the two periods above/);assert.match(html,/Current period: 1 of 3/);
+ assert.match(html,/before drawing a conclusion/);
  assert.doesNotMatch(html,/Check the original records|error message|lost work|Claude/);
  const partial=structuredClone(report);partial.comparison={supported:false,reason:'Incomplete',changes:[]};
  partial.findings=[{...finding,kind:'insufficient_data',change:null}];
  const incomplete=api.renderContent({report:partial});
  assert.match(incomplete,/Coverage note: information needed for a fair comparison is missing/);
  assert.match(incomplete,/Read the coverage note above/);
+});
+
+test('provider/account changes select a distinct report query; action explains its payoff',async()=>{
+ api.control.user={id:42,providers:['grok','google']};await setup();
+ assert.deepEqual(api.control.queryKey,['operational-brief',42,'google,grok']);
+ api.control.user={id:42,providers:['openai']};current();assert.deepEqual(api.control.queryKey,['operational-brief',42,'openai']);
+ const html=api.renderControl({narration:available,generating:false,notice:'',updated:false,onGenerate:()=>{}});
+ assert.match(html,/Nemotron can help explain what changed, why it matters, and what to check next/);
+ assert.match(html,/Sends this example to Nebius once/);api.control.user=null;
+});
+
+test('an explanation for an in-flight changed scenario is not attached or offered for generation',async()=>{
+ const view=await setup({...available,findingId:'another-scenario'});
+ assert.equal(view.content.narration,null);assert.equal(api.control.posts.length,0);
+ assert.doesNotMatch(api.renderControl(view.control),/Explain with NVIDIA Nemotron<\/button>/);
 });

@@ -23,7 +23,6 @@ export function HealthScorePreview() {
     <summary>How this score is calculated</summary>
     <div className="health-sample-content">
       <h3>Four evidence-based parts</h3>
-      <p className="health-sample-disclosure">This is not your account score or a score for the requests below.</p>
       <dl className="health-sample-breakdown">{sample.result.components.map(component => <div key={component.dimension}>
         <dt>{labels[component.dimension]} <span>· {component.weight * 100}% weight</span></dt>
         <dd><strong>{component.subscore}/100</strong><span>{evidence(component.dimension, component.numerator, component.denominator)}</span></dd>

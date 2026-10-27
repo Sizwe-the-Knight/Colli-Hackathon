@@ -11,7 +11,7 @@
 .brief-demo,.brief-period{font-size:12px;line-height:1.6;color:#616c68;margin:3px 0}
 .brief-period span{font-size:11px}
 .brief-demo{font-weight:600;color:#31585b}
-.brief-demo-description{font-size:12px;line-height:1.6;color:#616c68;max-width:65ch;margin:6px 0 0}
+.brief-demo-description{font-size:14px;line-height:1.6;color:#616c68;max-width:65ch;margin:28px auto 0;text-align:center}
 .brief-comparison{font-size:12px;line-height:1.6;color:#42666d;margin:12px 0 0;padding-top:10px;border-top:1px solid var(--brief-line)}
 .brief-ai-context{margin-top:20px;padding-left:14px;border-left:2px solid #91b7b0}
 .brief-ai-context h3{font-size:12px;font-weight:600;color:#356e68;margin:0 0 6px}

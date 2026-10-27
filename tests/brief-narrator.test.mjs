@@ -10,6 +10,7 @@ const compiled=await require('esbuild').build({stdin:{contents:`
  export * from './artifacts/api-server/src/operational/narration-contract';
  export * from './artifacts/api-server/src/operational/narration-budget';
  export * from './artifacts/api-server/src/operational/usage';
+ export * from './artifacts/api-server/src/operational/demo-scenario';
  `,resolveDir:root},bundle:true,write:false,platform:'node',format:'cjs'});
 const filename=path.join(root,'tests/narrator-compiled.cjs'),mod=new Module(filename);mod._compile(compiled.outputFiles[0].text,filename);
 const api=mod.exports;
@@ -123,9 +124,9 @@ test('input bound rejects too much evidence without a paid attempt',async t=>{
 test('plain-language choices preserve linked counts and provider, without invented cause, task or UI',()=>{
  const r=report(),before=JSON.stringify(r),lead=api.leadFinding(r),choices=api.narrativeChoices(r,lead);
  assert.deepEqual(choices.headline,["Anthropic couldn't complete one request."]);
- assert.deepEqual(choices.whatHappened,['1 of 3 requests failed in this period, compared with 0 of 2 before.']);
- assert.ok(choices.whyItMatters.every(v=>/don't know|don't show/.test(v)));
- assert.equal(choices.nextStep[0],'Compare the two periods above. This demo needs no action on your accounts.');
+ assert.deepEqual(choices.whatHappened,['2 of 3 requests worked; 1 failed. Before, 0 of 2 failed.']);
+ assert.ok(choices.whyItMatters.every(v=>/don't tell us/.test(v)));
+ assert.equal(choices.nextStep[0],'Compare the failed counts and total requests above. Look for repeated failures across more periods before deciding to switch services.');
  const body=api.providerRequest(r,lead,choices,api.MODEL);
  assert.ok(body);assert.ok(Buffer.byteLength(body)+1024<=8192);
  assert.doesNotMatch(JSON.stringify(choices),/Claude|lost work|website|writing an email|86\/100|healthScore/);
@@ -170,4 +171,14 @@ test('missing, corrupt and locked ledger fail closed without provider calls',asy
  assert.equal((await new api.BriefNarrator(config).generate(2,report())).status,'unavailable');
  await fs.unlink(budgetFile+'.lock');await fs.unlink(budgetFile);
  assert.equal((await new api.BriefNarrator(config).generate(3,report())).status,'unavailable');assert.equal(calls,0);
+});
+
+test('matched interpretation adds cautious significance and an available comparison, not an invented diagnosis',()=>{
+ const r=api.providerDemo(['google','grok']),f=api.leadFinding(r),c=api.narrativeChoices(r,f);
+ assert.match(c.headline[0],/Gemini/);assert.match(c.whatHappened[0],/2 of 3 requests worked; 1 failed/);
+ assert.match(c.whyItMatters[0],/doesn't by itself mean a service is unreliable/);
+ assert.match(c.nextStep[0],/Compare the failed counts and total requests above/);
+ const body=api.providerRequest(r,f,c,api.MODEL);assert.ok(body);assert.doesNotMatch(body,/Anthropic|OpenAI|email|accountId/);
+ const value={findingId:f.id,...Object.fromEntries(api.fields.map(k=>[k,c[k][0]]))};
+ assert.equal(api.validateNarrative({...value,whyItMatters:'Gemini lost your work because it was overloaded.'},f.id,c),null);
 });

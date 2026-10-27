@@ -77,7 +77,7 @@ export function legacyNarrativeChoices(report: UsageReport, finding: Finding): C
   }
 }
 
-export function narrativeChoices(report: UsageReport, finding: Finding): Choices | null {
+export function previousNarrativeChoices(report: UsageReport, finding: Finding): Choices | null {
   const previous = report.periods.previous.totals, current = report.periods.current.totals;
   if (finding.kind === 'insufficient_data' && !report.comparison.supported) return {
     headline: ['We need a fuller picture.'],
@@ -102,7 +102,7 @@ export function narrativeChoices(report: UsageReport, finding: Finding): Choices
         now.filter(r => r.outcome === 'failure').length !== Number(change.current) ||
         ![...before, ...now].every(r => linked.has(r.key))) return null;
     const failed = now.filter(r => r.outcome === 'failure');
-    const names: Record<string, string> = { anthropic: 'Anthropic', openai: 'OpenAI' };
+    const names: Record<string, string> = { anthropic: 'Anthropic', openai: 'OpenAI', google: 'Gemini', grok: 'Grok', deepseek: 'DeepSeek', mistral: 'Mistral', perplexity: 'Perplexity' };
     const provider = failed.length === 1 ? names[failed[0].provider] : undefined;
     const taskUnknown = failed.length > 0 && failed.every(r => r.workflow === null);
     return {
@@ -135,6 +135,20 @@ export function narrativeChoices(report: UsageReport, finding: Finding): Choices
     nextStep: ['Do not change services based on text length alone.'],
   };
   return null;
+}
+
+// Enrich the factual observation without claiming a cause or a reliable trend.
+export function narrativeChoices(report: UsageReport, finding: Finding): Choices | null {
+  const choices = previousNarrativeChoices(report, finding);
+  if (!choices || finding.change?.metric !== 'failures') return choices;
+  const now = report.periods.current.totals, before = report.periods.previous.totals;
+  return { ...choices,
+    whatHappened: [
+      `${now.outcomes.success} of ${now.activities} requests worked; ${now.outcomes.failure} failed. Before, ${before.outcomes.failure} of ${before.activities} failed.`,
+    ],
+    whyItMatters: ["A failed request doesn't by itself mean a service is unreliable. These two periods don't tell us whether it will keep happening."],
+    nextStep: ['Compare the failed counts and total requests above. Look for repeated failures across more periods before deciding to switch services.'],
+  };
 }
 
 export function validateNarrative(value: unknown, findingId: string, choices: Choices): Narrative | null {

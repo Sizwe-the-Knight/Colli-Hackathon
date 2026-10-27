@@ -3,6 +3,7 @@ import { Link } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { getOperationalBrief, getBriefNarration, generateBriefNarration } from '@workspace/api-client-react';
 import { ArrowUpRight } from 'lucide-react';
+import { useAppContext } from '@/lib/context';
 import { ApiUnavailable } from '@/components/api-unavailable';
 import { BriefReveal } from '@/components/brief-reveal';
 import { LegalFooter } from '@/components/legal-footer';
@@ -34,6 +35,7 @@ export function BriefNarrationControl({ narration, generating, notice, updated, 
       'Showing Colli’s summary from the records. An AI explanation is optional.');
   return <div className="brief-narrator">
     {narration?.status === 'available' && <>
+      <p>Nemotron can help explain what changed, why it matters, and what to check next.</p>
       <button className="brief-primary" type="button" disabled={generating} aria-busy={generating} aria-describedby="brief-narration-note" onClick={onGenerate}>{generating ? 'Preparing explanation…' : 'Explain with NVIDIA Nemotron'}</button>
       <p id="brief-narration-note">Sends this example to Nebius once, within the demo allowance.</p>
     </>}
@@ -52,8 +54,7 @@ export function BriefContent({ report, narration, narrationControl, highlightExp
     <header className="brief-edition">
       <h1 id="brief-title">Daily Executive Brief</h1>
       <p className="brief-period">{day(current.start)} – {day(current.end)} <span>(UTC · end date excluded)</span></p>
-      <p className="brief-demo">{report.provenance.kind === 'synthetic' ? 'Demo workspace' : 'User-supplied records · unverified'}</p>
-      {report.provenance.kind === 'synthetic' && <p className="brief-demo-description">Invented examples, not connected account activity. Only these synthetic findings go to Nebius when you ask. The illustrative score uses a separate 30-day example.</p>}
+      {report.provenance.kind !== 'synthetic' && <p>User-supplied records · unverified</p>}
     </header>
     <BriefHealthScore demo={report.provenance.kind === 'synthetic'} />
     <section className={`brief-feature${highlightExplanation && story && narration?.status === 'generated' ? ' brief-feature-updated' : ''}`} aria-labelledby="central-finding">
@@ -73,11 +74,14 @@ export function BriefContent({ report, narration, narrationControl, highlightExp
       <Link className="brief-primary" href="/dashboard">Continue to Dashboard <ArrowUpRight size={17} aria-hidden="true" /></Link>
       <p className="brief-destination">Explore the Control Panel.</p>
     </div>
+    {report.provenance.kind === 'synthetic' && <p className="brief-demo-description">Demo data: This report and the 86/100 Health Score use example records, not activity from connected AI accounts. Nemotron analyzes the example information when requested.{report.provenance.importId === 'demo-two-days' && ' No supported provider selection is available, so this is a separate example.'}</p>}
   </article>;
 }
 
 export function Brief() {
-  const query = useQuery({ queryKey: ['operational-brief'], queryFn: async ({ signal }) =>
+  const { user } = useAppContext();
+  const selection = [...new Set(user?.providers ?? [])].sort().join(',');
+  const query = useQuery({ queryKey: ['operational-brief', user?.id, selection], queryFn: async ({ signal }) =>
     operationalBriefSchema.parse(await getOperationalBrief(signal)), retry: false });
   const [narration, setNarration] = useState<{ report: unknown; value: BriefNarration } | null>(null);
   const [notice, setNotice] = useState('');
@@ -90,6 +94,7 @@ export function Brief() {
     if (query.data && !query.error) {
       // Cache read only: no inference, polling, retries or provider calls here.
       void getBriefNarration(controller.signal).then(narrationSchema.parse).then(value => {
+        if (value.findingId !== (centralFinding(query.data)?.id ?? null)) throw new Error('Report changed');
         if (!controller.signal.aborted) setNarration({ report: query.data, value });
       }).catch(() => { if (!controller.signal.aborted) setNotice('Showing Colli’s summary from the records.'); });
     }

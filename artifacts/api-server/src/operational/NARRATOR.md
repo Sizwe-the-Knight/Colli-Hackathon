@@ -26,24 +26,29 @@ The factual headline, named service and linked period counts stay visible even
 when AI wording is present. Nemotron's separately labelled explanation uses
 evidence-approved options containing those counts, the known provider and explicit
 uncertainty. It still cannot invent causes, tasks, error messages or consequences.
-For the current example: Anthropic could not complete one request; 1 of 3 failed,
-compared with 0 of 2 before. The failed record supplies neither a cause nor a task.
+Saved provider selections choose a stable, versioned synthetic scenario. For Gemini
+and Grok: 2 of 3 requests succeed and one Gemini request fails, versus 0 of 2
+failures before. No model identity, cause, task or price is fabricated. Preferences
+are not connections. Without supported selections, the historical separate
+Anthropic/OpenAI example remains available with its original cache fingerprint.
 
 There is no failed-request/error-detail view in this demo. The suggested action
 therefore refers to the period comparison actually shown in the Brief and makes
-clear that invented demo events need no changes to the user's accounts. Do not
+a cautious interpretation before suggesting a service switch. Do not
 promise a drill-down, retry control or access to original provider logs.
 
 The model still chooses from a constrained contract; this is not open-ended
 diagnosis or discovery of new patterns. The frontend keeps numerical observations
-separate from that interpretation. One Demo workspace disclosure covers the
+separate from that interpretation. One bottom-of-Brief disclosure covers the
 invented records and the separate illustrative score; AI attribution distinguishes
 new output, cached output and the non-AI summary.
 
 Stored results from the earlier vocabulary remain readable through the original
 strict validator, used only for cache reads. New provider responses must match the
-new choices. No report fingerprint, reservation, quota, model, endpoint or output
-limit changes. Cached historical wording is not rewritten or presented as a fresh
+new choices. Selected scenarios have distinct record-derived fingerprints and
+finding IDs; sorted/deduplicated preferences remain stable. Scenario changes still
+consume the same per-account and global allowances. No reservations are reset;
+quota, model, endpoint and output limits are unchanged. Cached historical wording is not rewritten or presented as a fresh
 inference. Testing the revised wording live requires an eligible unattempted
 account/report and separate approval; do not clear a cache to obtain another call.
 
@@ -79,7 +84,8 @@ evidence references are sent. No raw event IDs, user IDs, names, emails, workflo
 provider credentials or session data are sent. Oversize input falls back without
 truncating evidence. Synthetic status is preserved. Future private imports must
 continue deriving their report from the authenticated account on the server;
-the current route serves only the bundled synthetic demonstration.
+the current route serves only generated synthetic scenarios. Provider names in
+the approved wording can reflect preferences; raw preference lists are not sent.
 
 ## When spending can happen
 

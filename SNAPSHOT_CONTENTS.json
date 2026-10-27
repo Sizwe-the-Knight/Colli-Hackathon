@@ -1,8 +1,8 @@
 {
-  "sourceRelease": "b079b559639c111a57b555b72555b104c1aff788",
+  "sourceRelease": "bab5482d7aeb32ef88b0d528e99570f56abb2a6e",
   "formatVersion": 1,
   "scope": "All public tracked files except this self-referential manifest; private Git history and ignored validation artifacts are excluded.",
-  "fileCountIncludingManifest": 280,
+  "fileCountIncludingManifest": 281,
   "excludedSourcePaths": [
     ".replitignore",
     "PUBLICATION_REVIEW.md",
@@ -65,8 +65,8 @@
     },
     {
       "path": "DEVPOST.md",
-      "bytes": 4129,
-      "sha256": "9b5b9d5a077e58ceb33146f9cde45d48bdabc7854bf9fa7e3a675ccc144a991d"
+      "bytes": 4181,
+      "sha256": "4491e10c24a83e7b1a7461d020b7eda9105e3269ec0b2dc45cd127ede4d22577"
     },
     {
       "path": "LICENSE",
@@ -80,13 +80,13 @@
     },
     {
       "path": "README.md",
-      "bytes": 13233,
-      "sha256": "a67518088c5a35eea39800faa6d08de15768c9035cfdd42e7907963a8f70e446"
+      "bytes": 13355,
+      "sha256": "51384a29544f7cc508d27d5769531ddab356aec45b5b2bcc2fb63ed13d7ee242"
     },
     {
       "path": "SNAPSHOT_REVIEW.md",
-      "bytes": 10791,
-      "sha256": "261c212681204f9216142d2d97857928d0de5a9e1c0d714a7c930c9225d833e7"
+      "bytes": 12377,
+      "sha256": "fdbb412a109dc6850a8c545b31045620d99f369f1b2da7f3fa64ec94bc4b7f55"
     },
     {
       "path": "SNAPSHOT_SETUP.md",
@@ -175,13 +175,18 @@
     },
     {
       "path": "artifacts/api-server/src/operational/NARRATOR.md",
-      "bytes": 10971,
-      "sha256": "b060ca3e9d7f987f355615789d67a342fdeaaefdd59e6982ddd1a7dafddd2c14"
+      "bytes": 11489,
+      "sha256": "da22ade476b6ce5a8d6f2bfab4f9300e4534b06b0b051f353091533ecd781c2f"
     },
     {
       "path": "artifacts/api-server/src/operational/README.md",
       "bytes": 5261,
       "sha256": "cd65fc88cf6f89188932973d92a1fbde34404ad478c0bc8ae4ec55ac65ff7a0f"
+    },
+    {
+      "path": "artifacts/api-server/src/operational/demo-scenario.ts",
+      "bytes": 1945,
+      "sha256": "baf3ff7e4d7072396d51148a82e80fc73e6d3ba5b12f233a3b28f361549512d7"
     },
     {
       "path": "artifacts/api-server/src/operational/health-score.ts",
@@ -195,8 +200,8 @@
     },
     {
       "path": "artifacts/api-server/src/operational/narration-contract.ts",
-      "bytes": 12111,
-      "sha256": "b246c6d307fcfb542bdd8050e40e2736bc1be97b6c5658dbabed1c4c7d89503b"
+      "bytes": 13143,
+      "sha256": "3e635ce8a6769f0bade45d88a8c77234c323bc21fbd98d9abe8e0b639dd94e56"
     },
     {
       "path": "artifacts/api-server/src/operational/narration-postgres.ts",
@@ -205,8 +210,8 @@
     },
     {
       "path": "artifacts/api-server/src/operational/narrator.ts",
-      "bytes": 8344,
-      "sha256": "b0bf0810153397515cadab55f380358a69c76483deb9a662fbccc2969bab9181"
+      "bytes": 8524,
+      "sha256": "219eb0b327d55fbc36cda5e185326f24dc431e98a9499effe6bd4176d83989f5"
     },
     {
       "path": "artifacts/api-server/src/operational/usage.ts",
@@ -255,8 +260,8 @@
     },
     {
       "path": "artifacts/api-server/src/routes/operational-brief.ts",
-      "bytes": 2265,
-      "sha256": "d252dccde90d8c7d912ee13bc7fb1f3dd3236cd4407c703bec503292d27f43df"
+      "bytes": 2492,
+      "sha256": "86367c88cfe633015ae044d37c4419f00ade5acc08ad049271a359de392ee437"
     },
     {
       "path": "artifacts/api-server/src/routes/recommendations.ts",
@@ -340,8 +345,8 @@
     },
     {
       "path": "artifacts/colli/src/components/health-score-preview.tsx",
-      "bytes": 2361,
-      "sha256": "bad0ae3e91729a722e574e563ab4cb0f4ed94cfa3e5cbb4ba870fa9165189b55"
+      "bytes": 2245,
+      "sha256": "29c29d68c434c51527c173b185ed058c20ad338db0b392618accf8788aee7df2"
     },
     {
       "path": "artifacts/colli/src/components/legal-footer.tsx",
@@ -670,8 +675,8 @@
     },
     {
       "path": "artifacts/colli/src/lib/operational-brief.ts",
-      "bytes": 9967,
-      "sha256": "b69b6b726efa85d1f8038a688fe4925ce6a32c96767cf883ec994240a76c3faf"
+      "bytes": 10072,
+      "sha256": "d2e421b5552fd9a3bcaaf8fb978ae1029bb6e992467ef47ff5bc5208709564e3"
     },
     {
       "path": "artifacts/colli/src/lib/simulation.ts",
@@ -700,13 +705,13 @@
     },
     {
       "path": "artifacts/colli/src/pages/brief.css",
-      "bytes": 7687,
-      "sha256": "bff1cf3f001e9f66333336c8651e3962eff25249abeeaf59e16496b27fd0f8ba"
+      "bytes": 7709,
+      "sha256": "dd5e0a24f0698685fb09a9a3d6725b0474c166cdb96cb05d4fdca9dfb7061231"
     },
     {
       "path": "artifacts/colli/src/pages/brief.tsx",
-      "bytes": 10069,
-      "sha256": "de4fe827a2ad063a8f3010d3d821cbe04ec13058ff6dd80ab086f8e1263ae8e2"
+      "bytes": 10543,
+      "sha256": "f35ab3c401b094e59a2b682fbb12a931691b8bfd535924e9fd8541c2bd7b8324"
     },
     {
       "path": "artifacts/colli/src/pages/coming-soon.tsx",
@@ -735,8 +740,8 @@
     },
     {
       "path": "artifacts/colli/src/pages/legal.tsx",
-      "bytes": 9378,
-      "sha256": "6eb5208db475cabb9a6407470395f8011a65a2bb6cff085cffaef44d8fcaa893"
+      "bytes": 9444,
+      "sha256": "905080a3e5b883f82a56127b5cfee472ab16b04b41a0800dc3d61fea2e612221"
     },
     {
       "path": "artifacts/colli/src/pages/models.tsx",
@@ -1320,13 +1325,13 @@
     },
     {
       "path": "tests/brief-narrator.test.mjs",
-      "bytes": 13790,
-      "sha256": "133e8bea4ed48ffe0ca0582ddca23c92c68d9be80de607cc1836cb9137436318"
+      "bytes": 14730,
+      "sha256": "96ee5a9f2a5876e6c726192a97162de615d29d447d48cbbb9c558a08fe172a29"
     },
     {
       "path": "tests/brief-presentation.test.mjs",
-      "bytes": 14513,
-      "sha256": "e9b8563d8ca6a5b6d765b2ae79337baa762799eb44b11724494f8fae7d06fdad"
+      "bytes": 15801,
+      "sha256": "21d8662745e3703d9b2fa1a55d9434a7c3acffc6d942794796b7509e6df93efb"
     },
     {
       "path": "tests/brief-reveal.test.mjs",
@@ -1360,13 +1365,13 @@
     },
     {
       "path": "tests/narration-postgres.test.mjs",
-      "bytes": 10735,
-      "sha256": "f43bd3586f71a6897332dbc0cc68c93343ee24963bbfb28da1ea90f7b3fed13d"
+      "bytes": 12248,
+      "sha256": "ac1e74702b6a8f6af07f75fbae955f601f467235fd77ffaf86d72425c341fdd0"
     },
     {
       "path": "tests/operational-brief.test.mjs",
-      "bytes": 16145,
-      "sha256": "4fec23dadd8cc160237d5145f767aa6b56b567e2bf8a9200e5d6ae9bf57d6ccb"
+      "bytes": 19522,
+      "sha256": "c82b85ab76317f6180478b5437ebe9774d46c794fe04716aa7bb303f2546acc7"
     },
     {
       "path": "tests/operational-usage.test.mjs",
@@ -1433,6 +1438,6 @@
   "promotion": {
     "date": "2026-10-27",
     "method": "Approved file-level patch; no private Git history imported",
-    "parentPublicCommit": "2a2d708fc07d265ab7b1e32e92e4493ebe43fd03"
+    "parentPublicCommit": "da81b7702a17cf54f4c1290a2c41bd38547c7465"
   }
 }

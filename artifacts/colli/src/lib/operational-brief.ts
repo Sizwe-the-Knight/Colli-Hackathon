@@ -86,7 +86,7 @@ export function findingHeadline(finding: BriefFinding, report?: OperationalBrief
 export function findingExplanation(finding: BriefFinding, report?: OperationalBrief): { context: string; significance: string; nextStep: string } {
   const records = currentFailures(finding, report);
   const failedRecord = records?.failures.length === 1 ? records.failures[0] : null;
-  const providerNames: Record<string, string> = { anthropic: 'Anthropic', openai: 'OpenAI' };
+  const providerNames: Record<string, string> = { anthropic: 'Anthropic', openai: 'OpenAI', google: 'Gemini', grok: 'Grok', deepseek: 'DeepSeek', mistral: 'Mistral', perplexity: 'Perplexity' };
   const provider = failedRecord ? providerNames[failedRecord.provider] ?? failedRecord.provider : null;
   if (finding.change?.metric === 'failures') return {
     context: provider ? `${provider} couldn't complete one request. We don't know why.` : `The records show ${finding.change.current} ${Number(finding.change.current) === 1 ? 'failure' : 'failures'}, compared with ${finding.change.previous} in the previous period.`,
@@ -94,7 +94,7 @@ export function findingExplanation(finding: BriefFinding, report?: OperationalBr
       ? "We don't know what the task was or whether anyone's work was affected. One example doesn't show a bigger problem."
       : "We don't know whether anyone's work was affected or whether this is a bigger problem.",
     nextStep: report?.provenance.kind === 'synthetic'
-      ? 'Compare the two periods above. This demo needs no action on your accounts.'
+      ? 'Compare the failed counts in the two periods above before drawing a conclusion.'
       : 'Compare the two periods above before changing services. The cause is still unknown.',
   };
   if (finding.kind === 'insufficient_data') return {
