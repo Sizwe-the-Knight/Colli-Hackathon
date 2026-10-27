@@ -1,8 +1,18 @@
-# Colli — make sense of your AI
+# Colli
 
-**Nebius × NVIDIA Global AI Hackathon · intended track: Best Apps and Agents**
+**Your AI ecosystem. Summarized.**
 
-AI tools spread activity across separate accounts and screens. Colli's idea is a calm opening brief answering **what happened, why it matters, and what to do next** in ordinary language. Understand the central finding in 30 seconds, then continue to the Dashboard to explore. This beta demonstrates that journey with clearly labelled synthetic data; it does not yet connect your AI accounts.
+> Colli doesn't tell you which AI is best. Colli tells you whether the AI ecosystem you've built is working for you.
+
+Managing multiple AI tools shouldn't mean navigating multiple complicated dashboards.
+
+Colli brings AI activity into one clear **Daily Executive Brief**, helping people understand what happened, why it matters, and what to do next.
+
+In approximately 30 seconds, users can see their AI situation, understand important changes, and decide whether anything needs attention.
+
+NVIDIA Nemotron 3.5 Lightning, accessed through Nebius Token Factory, helps interpret operational findings in everyday language.
+
+**Nebius × NVIDIA Global AI Hackathon | Best Apps and Agents Track**
 
 **[Open the live beta](https://colli-hackathon-demo.onrender.com)** · [Judge instructions](DEVPOST.md) · [Privacy](https://colli-hackathon-demo.onrender.com/privacy) · [Terms](https://colli-hackathon-demo.onrender.com/terms)
 
