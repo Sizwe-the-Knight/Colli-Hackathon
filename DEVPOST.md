@@ -17,10 +17,10 @@
    external accounts or import your activity.
 4. Read the Daily Executive Brief: what happened, why it matters and what to do next.
    The short opening reveal is cosmetic; reduced-motion preferences skip it.
-   The report is explicitly synthetic and the AI Health Score is **Not assessed**.
-   Select **Preview sample score** for a separate hypothetical 86/100 and four
-   evidence ratios. It is not your score or the current Brief’s evidence. **Hide
-   sample score** collapses it; no AI call occurs.
+   **Demo workspace** identifies invented records, not connected account activity.
+   The **Illustrative 86/100** uses a separate 30-day example; your account remains
+   **Not assessed**. Select **How this score is calculated** for its four evidence
+   ratios. Expanding these details makes no AI call.
    Select **Explain with NVIDIA Nemotron** once to request a genuine
    explanation through Nebius, using only that synthetic example. Success is
    explicitly attributed; unavailable generation keeps the deterministic wording.

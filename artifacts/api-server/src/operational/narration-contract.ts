@@ -30,7 +30,9 @@ export function leadFinding(report: UsageReport): Finding | undefined {
 // Constrained narration, not a keyword filter for arbitrary prose. Each allowed
 // sentence is justified by a deterministic finding. Numbers/evidence stay in Colli.
 // New finding kinds require reviewed wording before becoming model-eligible.
-export function narrativeChoices(report: UsageReport, finding: Finding): Choices | null {
+// Read-only compatibility for previously validated, persisted results. Never send
+// this vocabulary in a new request or change the report's reservation identity.
+export function legacyNarrativeChoices(report: UsageReport, finding: Finding): Choices | null {
   if (finding.kind === 'insufficient_data' && !report.comparison.supported) return {
     headline: ['There is not enough information to compare yet.', 'A clearer picture needs more information.'],
     whatHappened: ['The supplied records do not support a reliable comparison.'],
@@ -75,6 +77,66 @@ export function narrativeChoices(report: UsageReport, finding: Finding): Choices
   }
 }
 
+export function narrativeChoices(report: UsageReport, finding: Finding): Choices | null {
+  const previous = report.periods.previous.totals, current = report.periods.current.totals;
+  if (finding.kind === 'insufficient_data' && !report.comparison.supported) return {
+    headline: ['We need a fuller picture.'],
+    whatHappened: ['Some information is missing, so we cannot fairly compare these periods.'],
+    whyItMatters: ["Missing information doesn't mean everything went well."],
+    nextStep: ['Read the coverage note above before drawing a conclusion.'],
+  };
+  if (finding.kind === 'no_action' && report.comparison.supported) return {
+    headline: ['No change needed.'], whatHappened: ['The totals stayed the same across these two periods.'],
+    whyItMatters: ["That doesn't tell us whether every task went well."],
+    nextStep: ['No change is suggested by these totals alone.'],
+  };
+  const change = finding.change;
+  if (!report.comparison.supported || finding.kind !== 'change' || !change) return null;
+  if (change.metric === 'failures') {
+    const linked = new Set(finding.evidence.recordKeys);
+    const recordsFor = (keys: string[]) => report.records.filter(r => keys.includes(r.key));
+    const before = recordsFor(previous.recordKeys), now = recordsFor(current.recordKeys);
+    // Context comes from linked evidence, never an invented provider or count.
+    if (before.length !== previous.activities || now.length !== current.activities ||
+        before.filter(r => r.outcome === 'failure').length !== Number(change.previous) ||
+        now.filter(r => r.outcome === 'failure').length !== Number(change.current) ||
+        ![...before, ...now].every(r => linked.has(r.key))) return null;
+    const failed = now.filter(r => r.outcome === 'failure');
+    const names: Record<string, string> = { anthropic: 'Anthropic', openai: 'OpenAI' };
+    const provider = failed.length === 1 ? names[failed[0].provider] : undefined;
+    const taskUnknown = failed.length > 0 && failed.every(r => r.workflow === null);
+    return {
+      headline: [provider ? `${provider} couldn't complete one request.` : `${failed.length} of ${current.activities} AI requests failed.`],
+      whatHappened: [`${change.current} of ${current.activities} requests failed in this period, compared with ${change.previous} of ${previous.activities} before.`],
+      whyItMatters: taskUnknown
+        ? ["We don't know why, what the task was, or whether anyone's work was affected.", "These records don't show the cause or the task. They don't establish a bigger problem."]
+        : ["These records don't show the cause or whether anyone's work was affected."],
+      nextStep: report.provenance.kind === 'synthetic'
+        ? ['Compare the two periods above. This demo needs no action on your accounts.']
+        : ['Compare the two periods above before changing services. The cause is still unknown.'],
+    };
+  }
+  if (change.metric === 'recordedCost') return {
+    headline: ['Recorded spending changed.'],
+    whatHappened: [`${change.currency} ${change.current} was recorded, compared with ${change.currency} ${change.previous} before.`],
+    whyItMatters: ['These amounts may not cover your whole bill. They are not proof of savings.'],
+    nextStep: ['Compare the amounts above without adding different currencies together.'],
+  };
+  if (change.metric === 'activities') return {
+    headline: ['The number of AI requests changed.'],
+    whatHappened: [`There were ${change.current} AI requests, compared with ${change.previous} before.`],
+    whyItMatters: ["More requests don't necessarily mean more useful work."],
+    nextStep: ['Compare the two periods above before deciding whether anything needs to change.'],
+  };
+  if (change.metric === 'inputTokens' || change.metric === 'outputTokens') return {
+    headline: ['The amount of text processed changed.'],
+    whatHappened: [change.metric === 'inputTokens' ? 'The amount of text sent to AI changed.' : 'The amount of text returned by AI changed.'],
+    whyItMatters: ["Text length alone doesn't tell us how useful or costly the work was."],
+    nextStep: ['Do not change services based on text length alone.'],
+  };
+  return null;
+}
+
 export function validateNarrative(value: unknown, findingId: string, choices: Choices): Narrative | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const v = value as Record<string, unknown>;
@@ -95,7 +157,7 @@ export function providerRequest(report: UsageReport, finding: Finding, choices: 
     // Raw HTTP extension; SDK `extra_body` is not a JSON payload wrapper.
     chat_template_kwargs: { enable_thinking: false },
     messages: [
-      { role: 'system', content: 'Compose a concise everyday-language Daily Brief from the supplied finding. Choose exactly one approved sentence per field in the JSON schema. Pick a helpful, conservative combination. Do not add facts, numbers, causes, promises or advice. No change needed is valid when offered. Return JSON only.' },
+      { role: 'system', content: 'Explain this evidence to a friend who knows nothing about AI technology. Choose exactly one evidence-approved option per field in the JSON schema. Use the concrete counts and named service when supplied. Say what happened, what we do not know, and the available next step. Never invent a cause, task, lost work, trend or an error screen. The displayed period comparison is available; raw error details are not. No change needed is valid when offered. Return JSON only.' },
       { role: 'user', content: JSON.stringify({ findingId: finding.id, kind: finding.kind, change: finding.change,
         evidence, periods: finding.evidence.periods, coverage: { previous: report.periods.previous.coverage, current: report.periods.current.coverage },
         synthetic: report.provenance.kind === 'synthetic', independentlyVerified: false }) },

@@ -44,7 +44,7 @@ test('valid constrained output, fixed endpoint, bounds, secret isolation and rea
  });
  const r=report();assert.equal(narrator.read(1,r).status,'available');assert.equal(calls,0);
  const result=await narrator.generate(1,r);assert.equal(result.source,'nemotron');assert.equal(result.status,'generated');
- assert.equal(result.narrative.headline,'More AI attempts did not complete.');
+ assert.equal(result.narrative.headline,"Anthropic couldn't complete one request.");
  assert.equal(narrator.read(1,r).status,'cached');assert.equal((await narrator.generate(1,r)).status,'cached');assert.equal(calls,1);
  assert.doesNotMatch(JSON.stringify(result),/offline-test-key/);
  assert.equal(JSON.parse((await fs.readFile(budgetFile,'utf8')).trim()).tokens,8704);
@@ -111,13 +111,43 @@ test('no-change and incomplete findings constrain the available language',()=>{
  assert.ok(api.narrativeChoices(r,r.findings[0]).headline.includes('No change needed.'));
  const partial=api.processUsage({...structuredClone(input),periods:{...input.periods,current:{...input.periods.current,coverage:'partial'}}});
  const lead=api.leadFinding(partial),choices=api.narrativeChoices(partial,lead);
- assert.match(choices.whatHappened[0],/do not support a reliable comparison/);
+ assert.match(choices.whatHappened[0],/cannot fairly compare/);
  assert.equal(api.validateNarrative({findingId:lead.id,...Object.fromEntries(api.fields.map(f=>[f,choices[f][0]])),headline:'Spending increased.'},lead.id,choices),null);
 });
 test('input bound rejects too much evidence without a paid attempt',async t=>{
  let calls=0;const {narrator,budgetFile}=await setup(t,async()=>{calls++;throw new Error('Unexpected fetch')});
  const r=report(),lead=api.leadFinding(r);lead.evidence.recordKeys=Array.from({length:33},(_,i)=>String(i));
  assert.equal((await narrator.generate(1,r)).status,'unsupported');assert.equal(calls,0);assert.equal(await fs.readFile(budgetFile,'utf8'),'');
+});
+
+test('plain-language choices preserve linked counts and provider, without invented cause, task or UI',()=>{
+ const r=report(),before=JSON.stringify(r),lead=api.leadFinding(r),choices=api.narrativeChoices(r,lead);
+ assert.deepEqual(choices.headline,["Anthropic couldn't complete one request."]);
+ assert.deepEqual(choices.whatHappened,['1 of 3 requests failed in this period, compared with 0 of 2 before.']);
+ assert.ok(choices.whyItMatters.every(v=>/don't know|don't show/.test(v)));
+ assert.equal(choices.nextStep[0],'Compare the two periods above. This demo needs no action on your accounts.');
+ const body=api.providerRequest(r,lead,choices,api.MODEL);
+ assert.ok(body);assert.ok(Buffer.byteLength(body)+1024<=8192);
+ assert.doesNotMatch(JSON.stringify(choices),/Claude|lost work|website|writing an email|86\/100|healthScore/);
+ assert.doesNotMatch(JSON.parse(body).messages[1].content,/86\/100|healthScore|demo-model|Synthetic summarization/);
+ assert.equal(JSON.stringify(r),before);
+ const changed=structuredClone(input);changed.records.find(v=>v.eventId==='c2').provider='openai';
+ const other=api.processUsage(changed);assert.deepEqual(api.narrativeChoices(other,api.leadFinding(other)).headline,["OpenAI couldn't complete one request."]);
+ changed.records.find(v=>v.eventId==='c2').workflow='Known synthetic task';
+ const known=api.processUsage(changed);assert.ok(api.narrativeChoices(known,api.leadFinding(known)).whyItMatters.every(v=>!v.includes('what the task was')));
+ const unlinked=structuredClone(r);api.leadFinding(unlinked).evidence.recordKeys=[];
+ assert.equal(api.narrativeChoices(unlinked,api.leadFinding(unlinked)),null);
+ const mismatch=structuredClone(r);mismatch.periods.current.totals.activities=99;
+ assert.equal(api.narrativeChoices(mismatch,api.leadFinding(mismatch)),null);
+});
+
+test('new responses cannot use the old generic vocabulary or unsupported practical claims',()=>{
+ const r=report(),lead=api.leadFinding(r),choices=api.narrativeChoices(r,lead);
+ const valid={findingId:lead.id,...Object.fromEntries(api.fields.map(f=>[f,choices[f][0]]))};
+ for(const [field,text] of [['headline','More AI attempts did not complete.'],['whatHappened','Claude lost your email.'],
+  ['whyItMatters','Anthropic was overloaded.'],['nextStep','Open the failed request in Colli to see its error message.']]){
+  assert.equal(api.validateNarrative({...valid,[field]:text},lead.id,choices),null);
+ }
 });
 test('global lifetime call/token budgets and persisted per-account/global request limits',async t=>{
  const {budgetFile}=await setup(t,async()=>{throw new Error('No network')});

@@ -77,7 +77,9 @@ export function findingHeadline(finding: BriefFinding, report?: OperationalBrief
   if (change?.metric === 'failures') return Number(change.current) === 1 ? 'One AI request failed.' : `${change.current} AI requests failed in these records.`;
   if (finding.kind === 'insufficient_data') return 'We need a fuller picture.';
   if (finding.kind === 'no_action') return 'The recorded totals are unchanged.';
-  return finding.whatChanged;
+  if (change?.metric === 'recordedCost') return 'Recorded spending changed.';
+  if (change?.metric === 'activities') return 'The number of AI requests changed.';
+  return 'The amount of text processed changed.';
 }
 
 // Editorial presentation only. Calculated findings and source evidence stay intact.
@@ -87,19 +89,45 @@ export function findingExplanation(finding: BriefFinding, report?: OperationalBr
   const providerNames: Record<string, string> = { anthropic: 'Anthropic', openai: 'OpenAI' };
   const provider = failedRecord ? providerNames[failedRecord.provider] ?? failedRecord.provider : null;
   if (finding.change?.metric === 'failures') return {
-    context: provider ? `A request to ${provider} was recorded as unsuccessful. We don't yet know why.` : `The records show ${finding.change.current} ${Number(finding.change.current) === 1 ? 'failure' : 'failures'}, compared with ${finding.change.previous} in the previous period.`,
-    significance: "We haven't seen enough to know whether this is a bigger issue or whether anyone's work was affected.",
-    nextStep: 'Check the original records before making changes.',
+    context: provider ? `${provider} couldn't complete one request. We don't know why.` : `The records show ${finding.change.current} ${Number(finding.change.current) === 1 ? 'failure' : 'failures'}, compared with ${finding.change.previous} in the previous period.`,
+    significance: failedRecord && failedRecord.workflow === null
+      ? "We don't know what the task was or whether anyone's work was affected. One example doesn't show a bigger problem."
+      : "We don't know whether anyone's work was affected or whether this is a bigger problem.",
+    nextStep: report?.provenance.kind === 'synthetic'
+      ? 'Compare the two periods above. This demo needs no action on your accounts.'
+      : 'Compare the two periods above before changing services. The cause is still unknown.',
   };
   if (finding.kind === 'insufficient_data') return {
     context: 'Some information needed to compare the two periods is missing.',
     significance: "Missing information doesn't mean nothing happened, nothing was spent, or everything is working well.",
-    nextStep: 'Check that the records cover both periods and include the missing details.',
+    nextStep: 'Read the coverage note above before drawing a conclusion.',
   };
   if (finding.kind === 'no_action') return {
     context: 'The totals we can compare stayed the same across both periods.',
     significance: "Unchanged totals alone don't tell us whether everything is working well.",
-    nextStep: 'No change is suggested by these totals alone. Check the records if you have other concerns.',
+    nextStep: 'No change is suggested by these totals alone.',
   };
-  return { context: '', significance: finding.whyItMatters, nextStep: finding.investigateNext };
+  if (finding.change?.metric === 'recordedCost') return {
+    context: `${finding.change.currency} ${finding.change.current} was recorded, compared with ${finding.change.currency} ${finding.change.previous} before.`,
+    significance: 'These amounts may not cover your whole bill. They are not proof of savings.',
+    nextStep: 'Compare the amounts above without adding different currencies together.',
+  };
+  if (finding.change?.metric === 'activities') return {
+    context: `There were ${finding.change.current} AI requests, compared with ${finding.change.previous} before.`,
+    significance: "More requests don't necessarily mean more useful work.",
+    nextStep: 'Compare the two periods above before deciding whether anything needs to change.',
+  };
+  return { context: 'The amount of text sent to or returned by AI changed.',
+    significance: "Text length alone doesn't tell us how useful or costly the work was.",
+    nextStep: 'Do not change services based on text length alone.' };
+}
+
+export function findingComparison(finding: BriefFinding, report: OperationalBrief): string | null {
+  if (!report.comparison.supported || finding.change?.metric !== 'failures' || !currentFailures(finding, report)) return null;
+  const keys = new Set(report.periods.previous.totals.recordKeys);
+  const before = report.records.filter(r => keys.has(r.key));
+  if (before.length !== report.periods.previous.totals.activities ||
+      before.filter(r => r.outcome === 'failure').length !== Number(finding.change.previous) ||
+      !before.every(r => finding.evidence.recordKeys.includes(r.key))) return null;
+  return `Previous period: ${finding.change.previous} of ${before.length} AI requests failed. Current period: ${finding.change.current} of ${report.periods.current.totals.activities}.`;
 }

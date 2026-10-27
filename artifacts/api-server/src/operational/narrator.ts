@@ -1,7 +1,7 @@
 import { isAbsolute } from 'node:path';
 import type { UsageReport } from './usage';
 import { NarrationBudget, type NarrationStore } from './narration-budget';
-import { MODEL, ENDPOINT, fingerprint, hash, leadFinding, narrativeChoices, providerRequest, validateNarrative,
+import { MODEL, ENDPOINT, fingerprint, hash, leadFinding, narrativeChoices, legacyNarrativeChoices, providerRequest, validateNarrative,
   type NarrationResult } from './narration-contract';
 
 export interface NarratorConfig { enabled: boolean; apiKey: string; model: string; budgetFile: string; maxCalls: number; maxTokens: number; storage?: 'file' | 'postgres' }
@@ -57,7 +57,9 @@ export class BriefNarrator {
       const saved = await this.budget.lookup(this.key(accountId, report), hash(String(accountId)));
       if (!saved) return initial;
       const finding = leadFinding(report)!;
-      const narrative = validateNarrative(saved.narrative, finding.id, narrativeChoices(report, finding)!);
+      const legacy = legacyNarrativeChoices(report, finding);
+      const narrative = validateNarrative(saved.narrative, finding.id, narrativeChoices(report, finding)!) ??
+        (legacy ? validateNarrative(saved.narrative, finding.id, legacy) : null);
       // Durable results are revalidated against today's exact evidence contract.
       return narrative ? { ...initial, status: 'cached', source: 'nemotron', narrative, model: this.config.model }
         : { ...initial, status: 'already_attempted' };

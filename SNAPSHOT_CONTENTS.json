@@ -1,5 +1,5 @@
 {
-  "sourceRelease": "ab14977c39c7f51455b9f3b9d7835d2bfbc4c709",
+  "sourceRelease": "b079b559639c111a57b555b72555b104c1aff788",
   "formatVersion": 1,
   "scope": "All public tracked files except this self-referential manifest; private Git history and ignored validation artifacts are excluded.",
   "fileCountIncludingManifest": 280,
@@ -65,8 +65,8 @@
     },
     {
       "path": "DEVPOST.md",
-      "bytes": 4122,
-      "sha256": "9604f0ed6329ac67bf839e01fbf842b76c62e521fa49dbaccca862cf8b5d37b5"
+      "bytes": 4129,
+      "sha256": "9b5b9d5a077e58ceb33146f9cde45d48bdabc7854bf9fa7e3a675ccc144a991d"
     },
     {
       "path": "LICENSE",
@@ -80,18 +80,18 @@
     },
     {
       "path": "README.md",
-      "bytes": 13163,
-      "sha256": "b6c04bfed013bf201ecd40391559924a729289d56d94de327ff94a95e4c209ae"
+      "bytes": 13233,
+      "sha256": "a67518088c5a35eea39800faa6d08de15768c9035cfdd42e7907963a8f70e446"
     },
     {
       "path": "SNAPSHOT_REVIEW.md",
-      "bytes": 7728,
-      "sha256": "975bc287ef352e2ef2a6e49b13283e9585cd69be0f478db450486932a52473d6"
+      "bytes": 10791,
+      "sha256": "261c212681204f9216142d2d97857928d0de5a9e1c0d714a7c930c9225d833e7"
     },
     {
       "path": "SNAPSHOT_SETUP.md",
-      "bytes": 7180,
-      "sha256": "eeb798c0dbc1cc9d826bcc26f34111101cb7b7c7d36bef65ef2c7160f690923b"
+      "bytes": 7237,
+      "sha256": "325ae32d18def32b31e514b3088348b794ee3fc22fbddd4196b184600ea0a098"
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -170,13 +170,13 @@
     },
     {
       "path": "artifacts/api-server/src/operational/HEALTH_SCORE_POC.md",
-      "bytes": 5410,
-      "sha256": "39f65d039664b57219f0975c72ef3c90a533c00f141879ecf4083f37fa1575e8"
+      "bytes": 5487,
+      "sha256": "e3dfb63aca9a78c3f02d5f5534297ac0a5b25156c1396d57aa7a7b5c1b10cb11"
     },
     {
       "path": "artifacts/api-server/src/operational/NARRATOR.md",
-      "bytes": 9251,
-      "sha256": "20b8603a1a30ca8232d2ce6ee55843ea6b24194880ee8627bc8eba39a6908d8d"
+      "bytes": 10971,
+      "sha256": "b060ca3e9d7f987f355615789d67a342fdeaaefdd59e6982ddd1a7dafddd2c14"
     },
     {
       "path": "artifacts/api-server/src/operational/README.md",
@@ -195,8 +195,8 @@
     },
     {
       "path": "artifacts/api-server/src/operational/narration-contract.ts",
-      "bytes": 7583,
-      "sha256": "b8ab01186ef0e6ae485b4489412b4525465568f413b387ad8470b75c99a7fea6"
+      "bytes": 12111,
+      "sha256": "b246c6d307fcfb542bdd8050e40e2736bc1be97b6c5658dbabed1c4c7d89503b"
     },
     {
       "path": "artifacts/api-server/src/operational/narration-postgres.ts",
@@ -205,8 +205,8 @@
     },
     {
       "path": "artifacts/api-server/src/operational/narrator.ts",
-      "bytes": 8174,
-      "sha256": "3031c2b3f990c6e30a9717dc9259e606830e89e8fc1464d87294e2ea888853f7"
+      "bytes": 8344,
+      "sha256": "b0bf0810153397515cadab55f380358a69c76483deb9a662fbccc2969bab9181"
     },
     {
       "path": "artifacts/api-server/src/operational/usage.ts",
@@ -340,8 +340,8 @@
     },
     {
       "path": "artifacts/colli/src/components/health-score-preview.tsx",
-      "bytes": 2523,
-      "sha256": "a3ea1401cc5bbca2f8e2a1a2301ef8e66cfd1655d96d1613bfc11c41d62df142"
+      "bytes": 2361,
+      "sha256": "bad0ae3e91729a722e574e563ab4cb0f4ed94cfa3e5cbb4ba870fa9165189b55"
     },
     {
       "path": "artifacts/colli/src/components/legal-footer.tsx",
@@ -670,8 +670,8 @@
     },
     {
       "path": "artifacts/colli/src/lib/operational-brief.ts",
-      "bytes": 7842,
-      "sha256": "ed6018664ce55219635888aea727068f639d06b67b2d2ba7c61053aa65c7fd4b"
+      "bytes": 9967,
+      "sha256": "b69b6b726efa85d1f8038a688fe4925ce6a32c96767cf883ec994240a76c3faf"
     },
     {
       "path": "artifacts/colli/src/lib/simulation.ts",
@@ -700,13 +700,13 @@
     },
     {
       "path": "artifacts/colli/src/pages/brief.css",
-      "bytes": 7155,
-      "sha256": "fed07709b2772f8ddebd8e92539948e5fb9dc2c9df2179d921f8416fc869fb16"
+      "bytes": 7687,
+      "sha256": "bff1cf3f001e9f66333336c8651e3962eff25249abeeaf59e16496b27fd0f8ba"
     },
     {
       "path": "artifacts/colli/src/pages/brief.tsx",
-      "bytes": 9757,
-      "sha256": "b9859e3211b317d9882d056f2c001bc4c701b739839257cfd04045cfdb99afc8"
+      "bytes": 10069,
+      "sha256": "de4fe827a2ad063a8f3010d3d821cbe04ec13058ff6dd80ab086f8e1263ae8e2"
     },
     {
       "path": "artifacts/colli/src/pages/coming-soon.tsx",
@@ -1320,13 +1320,13 @@
     },
     {
       "path": "tests/brief-narrator.test.mjs",
-      "bytes": 11379,
-      "sha256": "ca0f2076f65fe6b85a91fbd6aa8982335c1f1d5a4584c4efef9c7ab61ffdf61e"
+      "bytes": 13790,
+      "sha256": "133e8bea4ed48ffe0ca0582ddca23c92c68d9be80de607cc1836cb9137436318"
     },
     {
       "path": "tests/brief-presentation.test.mjs",
-      "bytes": 12701,
-      "sha256": "ffb24298bda8d212af4a594ccea568c7002fcd2e1e8cd1a25e612e9210f39b19"
+      "bytes": 14513,
+      "sha256": "e9b8563d8ca6a5b6d765b2ae79337baa762799eb44b11724494f8fae7d06fdad"
     },
     {
       "path": "tests/brief-reveal.test.mjs",
@@ -1360,13 +1360,13 @@
     },
     {
       "path": "tests/narration-postgres.test.mjs",
-      "bytes": 9745,
-      "sha256": "83ff5dba406ebe0dc224d8ba3f54adf593b8071aaf3353560ebab9a044b84569"
+      "bytes": 10735,
+      "sha256": "f43bd3586f71a6897332dbc0cc68c93343ee24963bbfb28da1ea90f7b3fed13d"
     },
     {
       "path": "tests/operational-brief.test.mjs",
-      "bytes": 16200,
-      "sha256": "291deddc64c6e1214ac849a3c23ec2b7775eb3b532e232d2d0c6c8bd7765828f"
+      "bytes": 16145,
+      "sha256": "4fec23dadd8cc160237d5145f767aa6b56b567e2bf8a9200e5d6ae9bf57d6ccb"
     },
     {
       "path": "tests/operational-usage.test.mjs",
@@ -1428,5 +1428,11 @@
       "bytes": 236,
       "sha256": "8883c5dbf9e073ef0c7e91769b3e4abccca022df69b62fa7518d73e1512b37ef"
     }
-  ]
+  ],
+  "originalSnapshotSource": "ab14977c39c7f51455b9f3b9d7835d2bfbc4c709",
+  "promotion": {
+    "date": "2026-10-27",
+    "method": "Approved file-level patch; no private Git history imported",
+    "parentPublicCommit": "2a2d708fc07d265ab7b1e32e92e4493ebe43fd03"
+  }
 }

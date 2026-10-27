@@ -14,21 +14,23 @@ function evidence(dimension: string, numerator: number, denominator: number) {
 }
 
 // Static, generated artifact. Native disclosure requires no fetch, state or effect.
-// The account's separate "Not assessed" status remains visible when expanded.
+// The account's separate "Not assessed" status remains visible at all times.
 export function HealthScorePreview() {
   if (sample.result.status !== 'illustrative') return null;
-  return <details className="health-sample">
-    <summary><span className="health-sample-show">Preview sample score</span><span className="health-sample-hide">Hide sample score</span></summary>
+  return <div className="health-sample-preview">
+    <p className="health-sample-score"><strong>{sample.result.score}</strong><span>/100</span><span className="health-sample-score-label">Illustrative · separate 30-day example</span></p>
+    <details className="health-sample">
+    <summary>How this score is calculated</summary>
     <div className="health-sample-content">
-      <h3>Hypothetical synthetic example · 30 days</h3>
-      <p className="health-sample-disclosure">This is not your account score. It is not calculated from connected providers or the current Daily Brief evidence.</p>
-      <p className="health-sample-score"><strong>{sample.result.score}</strong><span>/100</span><span className="health-sample-score-label">Illustrative score</span></p>
+      <h3>Four evidence-based parts</h3>
+      <p className="health-sample-disclosure">This is not your account score or a score for the requests below.</p>
       <dl className="health-sample-breakdown">{sample.result.components.map(component => <div key={component.dimension}>
         <dt>{labels[component.dimension]} <span>· {component.weight * 100}% weight</span></dt>
         <dd><strong>{component.subscore}/100</strong><span>{evidence(component.dimension, component.numerator, component.denominator)}</span></dd>
       </div>)}</dl>
       <p className="health-sample-formula">{sample.result.components.map(c => `${c.weight} × ${c.subscore}`).join(' + ')} = {sample.result.score}.</p>
-      <p className="health-sample-footnote">Calculated deterministically from a separate, complete synthetic scenario—not by Nemotron. All four evidence categories are required. Your account remains Not assessed.</p>
+      <p className="health-sample-footnote">A fixed formula calculates this example, not Nemotron. All four evidence categories are required.</p>
     </div>
-  </details>;
+    </details>
+  </div>;
 }

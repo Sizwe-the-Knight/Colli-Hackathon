@@ -22,13 +22,14 @@ corepack.cmd pnpm --filter @workspace/colli run build
 corepack.cmd pnpm --filter @workspace/api-server run build
 ```
 
-**Known verification limitation:** a fresh offline frozen-lockfile check cannot
-finish without missing cached registry metadata. Keep the frozen lockfile,
-minimum-release-age policy and exact bcrypt/esbuild build approvals. Do not bypass
-these policies to get an install to pass. The snapshot’s four Replit-only dependency
-removals change no retained package resolution. Tests/builds using existing local
-dependencies are not proof of a new clean install; see SNAPSHOT_REVIEW.md for results.
-A normal networked frozen install is a release reproducibility gate.
+**Clean installation verified on 27 October 2026:** pnpm 11.25.0 completed a clean
+`install --frozen-lockfile` with public registry access. The earlier offline
+registry-metadata limitation is resolved. On Windows, the existing preinstall hook
+requires Git for Windows' sh on PATH. This was supplied only to the verification
+process; no execution policy or dependency safeguard was changed. The lockfile,
+minimum release age and exact bcrypt/esbuild build approvals remain unchanged.
+The supported verification platform was Windows x64 with Node 24.21.0; this does
+not claim a fresh Linux installation was executed here.
 
 ## Database prerequisites — operator action, never automatic
 

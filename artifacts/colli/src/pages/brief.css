@@ -10,6 +10,12 @@
 .brief-edition h1{font-size:18px;font-weight:550;line-height:1.4;margin:0 0 10px;letter-spacing:-.3px}
 .brief-demo,.brief-period{font-size:12px;line-height:1.6;color:#616c68;margin:3px 0}
 .brief-period span{font-size:11px}
+.brief-demo{font-weight:600;color:#31585b}
+.brief-demo-description{font-size:12px;line-height:1.6;color:#616c68;max-width:65ch;margin:6px 0 0}
+.brief-comparison{font-size:12px;line-height:1.6;color:#42666d;margin:12px 0 0;padding-top:10px;border-top:1px solid var(--brief-line)}
+.brief-ai-context{margin-top:20px;padding-left:14px;border-left:2px solid #91b7b0}
+.brief-ai-context h3{font-size:12px;font-weight:600;color:#356e68;margin:0 0 6px}
+.brief-ai-context p{font-size:14px;line-height:1.6;color:#4d5e5e;margin:0}
 .brief-feature{padding:26px 0 22px;border-radius:12px}
 .brief-feature-updated{animation:brief-explanation-update 1.6s ease-out 1}
 @keyframes brief-explanation-update{0%,20%{background:#e5f1ed;box-shadow:0 0 0 10px #e5f1ed}100%{background:transparent;box-shadow:0 0 0 0 transparent}}
@@ -33,10 +39,12 @@
 .brief-health h2{font-size:14px;line-height:1.4;font-weight:600;margin:0 0 12px;color:#42666d}
 .brief-health strong{display:block;font-size:clamp(40px,5vw,56px);line-height:1.08;letter-spacing:-1.7px;font-weight:550;color:#254d55;text-wrap:balance}
 .brief-health p{font-size:14px;line-height:1.6;margin:0;color:#42666d;max-width:32ch}
+.brief-health-demo{display:block}
+.brief-health-demo #brief-health-reason{max-width:none;margin-top:14px;font-size:12px}
+.health-sample-preview{min-width:0}
 .health-sample{grid-column:1/-1;min-width:0;border-top:1px solid #bdd8dd;padding-top:14px}
 .health-sample summary{width:fit-content;max-width:100%;min-height:44px;padding:10px 14px;border:1px solid #91b7b0;border-radius:8px;color:#234e4c;background:#f4faf8;font-size:13px;font-weight:600;cursor:pointer}
 .health-sample summary:hover{background:#d5e8e2}
-.health-sample-hide{display:none}.health-sample[open] .health-sample-hide{display:inline}.health-sample[open] .health-sample-show{display:none}
 .health-sample-content{padding-top:18px}
 .health-sample h3{font-size:15px;line-height:1.5;margin:0 0 8px;color:#254d55}
 .brief-health .health-sample-disclosure{max-width:none;font-size:13px;font-weight:600}

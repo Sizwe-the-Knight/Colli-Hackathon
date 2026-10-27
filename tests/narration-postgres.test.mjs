@@ -65,6 +65,21 @@ test('two independent narrator instances cannot both spend on the same account/r
  await Promise.all([service(db,fetcher).generate(1,report()),service(db,fetcher).generate(1,report())]);
  assert.equal(db.records.size,1);assert.equal(outbound,1);
 });
+
+test('previously approved wording survives the refinement without a new reservation or fetch',async()=>{
+ const db=database(),r=report(),lead=api.leadFinding(r),fingerprint=api.fingerprint(r);
+ const account=api.hash('1'),key=api.hash('1:'+fingerprint),choices=api.legacyNarrativeChoices(r,lead);
+ const narrative={findingId:lead.id,...Object.fromEntries(api.fields.map(f=>[f,choices[f][0]]))};
+ db.records.set(key,{account,judge:false,narrative});
+ const before=JSON.stringify([...db.records]);
+ const n=service(db,()=>assert.fail('No new inference for a cached report'));
+ assert.deepEqual((await n.readStored(1,r)).narrative,narrative);
+ assert.equal((await n.generate(1,r)).status,'cached');
+ assert.equal(api.fingerprint(r),fingerprint);assert.equal(JSON.stringify([...db.records]),before);
+ assert.ok(db.calls.every(c=>c.sql.includes('read_narration')));
+ narrative.nextStep='Open a nonexistent error screen';
+ assert.equal((await n.readStored(1,r)).status,'already_attempted');
+});
 for(const failure of ['provider','timeout','unsupported','save','reserve','read'])test(`${failure} fails closed with no automatic retry across restart`,async()=>{
  const db=database();let outbound=0;
  if(['save','reserve','read'].includes(failure))db.setFailure(failure+'_narration');

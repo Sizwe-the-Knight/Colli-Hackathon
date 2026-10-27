@@ -39,7 +39,7 @@ test('demo totals and the published wire contract come from the existing engine'
  assert.deepEqual(t.costs.map(c=>[c.currency,c.amount]),[['EUR','0.1'],['USD','0.4']]);
  assert.deepEqual(t.outcomes,{success:2,failure:1,unknown:0});
  assert.equal(api.findingHeadline(api.centralFinding(r)),"One AI request failed.");
- const html=api.render(r);assert.match(html,/Demonstration · synthetic records/);assert.match(html,/AI Health Score/);assert.match(html,/Not assessed/);
+ const html=api.render(r);assert.match(html,/Demo workspace/);assert.match(html,/AI Health Score/);assert.match(html,/Not assessed/);
  assert.doesNotMatch(html,/92\/100|exceptionally well|inactive for|Estimated monthly savings|complete cross-provider/);
 });
 test('incomplete coverage withholds comparison and preserves unknown quantities',()=>{
@@ -50,14 +50,14 @@ test('incomplete coverage withholds comparison and preserves unknown quantities'
 });
 test('empty input gives a useful next step without invented health',()=>{
  const r=api.processUsage({...fixture('synthetic'),records:[]}),html=api.render(api.operationalBriefSchema.parse(r));
- assert.match(html,/Not enough data/);assert.match(html,/Add activity records for two consecutive periods/);assert.match(html,/whether anything went wrong/);
+ assert.match(html,/Not enough data/);assert.match(html,/There is nothing here to compare yet/);assert.match(html,/whether anything went wrong/);
 });
 
 test('opening summary preserves evidence while prioritizing Dashboard navigation',()=>{
  const r=api.operationalBriefSchema.parse(demo()),before=JSON.stringify(r),lead=api.centralFinding(r);
  const copy=api.findingExplanation(lead),html=api.render(r);
  assert.match(copy.context,/1 failure.*0 in the previous period/);
- assert.match(copy.significance,/haven't seen enough/);
+ assert.match(copy.significance,/don't know whether anyone/);
  assert.equal((html.match(/Continue to Dashboard/g)??[]).length,1);
  const readingOrder=['Daily Executive Brief','AI Health Score','Not assessed','We need more complete information before giving you a score.','What happened?','Why does it matter?','What should I do next?','Continue to Dashboard'];
  for(let i=1;i<readingOrder.length;i++)assert.ok(html.indexOf(readingOrder[i-1])<html.indexOf(readingOrder[i]),readingOrder[i]+' follows '+readingOrder[i-1]);
@@ -66,7 +66,7 @@ test('opening summary preserves evidence while prioritizing Dashboard navigation
  assert.match(html,/Why does it matter/);assert.match(html,/What should I do next/);
  assert.doesNotMatch(html,/<table|brief-ledger|brief-findings|href="#evidence-/);
  assert.deepEqual(html.match(/<details[^>]*>/g), ['<details class="health-sample">']);
- assert.match(html,/An example, not your private account activity/);
+ assert.match(html,/Invented examples, not connected account activity/);
  assert.doesNotMatch(html,/unfinished AI|AI task didn't finish|Clarity before action/);
  assert.equal(JSON.stringify(r),before);
  const decreased={...lead,change:{...lead.change,previous:3,current:0,delta:-3}};
@@ -76,19 +76,19 @@ test('opening summary preserves evidence while prioritizing Dashboard navigation
 test('main finding uses current-period totals and the linked failure provider without inventing model or cause',()=>{
  const r=api.operationalBriefSchema.parse(demo()),lead=api.centralFinding(r),before=JSON.stringify(r);
  assert.equal(api.findingHeadline(lead,r),'One of three AI requests failed.');
- assert.equal(api.findingExplanation(lead,r).context,"A request to Anthropic was recorded as unsuccessful. We don't yet know why.");
+ assert.equal(api.findingExplanation(lead,r).context,"Anthropic couldn't complete one request. We don't know why.");
  const html=api.render(r);
  assert.match(html,/One of three AI requests failed/);
- assert.match(html,/A request to Anthropic was recorded as unsuccessful/);
+ assert.match(html,/Anthropic couldn&#x27;t complete one request/);
  assert.match(html,/We need more complete information before giving you a score/);
  assert.doesNotMatch(html,/Claude|lost work|<table/);
  // Sample continuity is legitimately 80/100, inside the separate opt-in fixture.
  // Neither that score nor an invented 95 may appear as the account assessment.
- assert.doesNotMatch(html.replace(/<details class="health-sample">[\s\S]*?<\/details>/, ''),/95\/100|80\/100|86\/100/);
+ assert.doesNotMatch(html.replace(/<section class="brief-health brief-health-demo"[\s\S]*?<\/section>/, ''),/95\/100|80\/100|86\/100/);
  assert.equal(JSON.stringify(r),before);
  const changed=structuredClone(r);
  changed.records.find(record=>record.eventId==='c2').provider='openai';
- assert.match(api.findingExplanation(api.centralFinding(changed),changed).context,/A request to OpenAI/);
+ assert.match(api.findingExplanation(api.centralFinding(changed),changed).context,/OpenAI couldn/);
  const unlinked={...lead,evidence:{...lead.evidence,recordKeys:[]}};
  assert.doesNotMatch(api.findingExplanation(unlinked,r).context,/Anthropic/);
  assert.equal(api.findingHeadline(unlinked,r),'One AI request failed.');
@@ -140,7 +140,7 @@ test('validated narration changes only editorial wording; figures, evidence and 
   narrative:{findingId:finding.id,headline:'More AI attempts did not complete.',whatHappened:'The supplied records show more unsuccessful attempts than in the previous period.',whyItMatters:'An unsuccessful attempt may interrupt someone’s work.',nextStep:'Check the supporting records to understand what happened.'}};
  const narration=api.narrationSchema.parse(value),html=api.render(r,narration);
  assert.match(html,/More AI attempts did not complete/);assert.equal(JSON.stringify(r),before);assert.doesNotMatch(html,/<table|EUR 0.1|USD 0.4/);
- assert.match(html,/Not assessed/);assert.match(html,/Demonstration · synthetic records/);assert.ok(r.records.some(record=>record.eventId==='c2'));
+ assert.match(html,/Not assessed/);assert.match(html,/Demo workspace/);assert.ok(r.records.some(record=>record.eventId==='c2'));
  assert.doesNotMatch(api.render(r,{...narration,findingId:'other'}),/More AI attempts did not complete/);
  assert.equal(api.narrationSchema.safeParse({...value,narrative:null}).success,false);
 });

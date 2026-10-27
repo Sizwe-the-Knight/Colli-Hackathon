@@ -16,7 +16,7 @@ The founder has verified hosted registration, onboarding, Brief/Dashboard naviga
 | Daily Executive Brief | Deterministic findings, plain-language explanation and next step; short reduced-motion-aware reveal; Continue to Dashboard. |
 | Operational processing | Validates structured records, keeps currencies separate, checks coverage and ties findings to evidence. The live route uses a bundled synthetic report. |
 | Dashboard/sidebar | Models, Activity, Workflows, Costs and Reports demonstrate the interface using sample metrics. They are not live provider analytics. |
-| AI Health Score | The Brief honestly says **Not assessed**. An optional **Preview sample score** shows a separate hypothetical 86/100 with its four evidence ratios; it is not this account or Brief’s assessed result. Dashboard sample scores are also illustrative. |
+| AI Health Score | The labelled demo immediately shows a separate **Illustrative 86/100**; **How this score is calculated** expands its four evidence ratios. The actual account remains **Not assessed**. It is not a score for the Brief’s requests. Dashboard sample scores are also illustrative. |
 | Provider selections | Saved preferences only: no account connection, subscription verification or private activity import. |
 | Colli Village | Non-interactive roadmap preview, not working teams or shared data. |
 | Account deletion | Contact-based requests; no automated deletion feature. |
@@ -33,11 +33,11 @@ Authenticated users select **Explain with NVIDIA Nemotron** in the Daily Brief. 
 
 Hosted generation uses PostgreSQL reservations and validated-result reuse across restarts: **100 total attempts, 3 per account**, 8,704 tokens reserved per attempt and 512 maximum output tokens. Public accounts can consume at most 80 attempts; 20 are reserved for server-designated judge accounts. There is no date-based reset or October expiry. An unchanged account/report reuses its result without spending again. Failed attempts count. New installations must complete the [hosted activation steps](lib/db/hosted/narration-v1/README.md) before enabling generation. Historical local acceptance reservations remain separate and unchanged; these are 100 additional hosted demo attempts, not unlimited credit usage.
 
-## Optional Health Score demonstration
+## Illustrative Health Score demonstration
 
-Within the Brief’s Health Score section, select **Preview sample score**, then
-**Hide sample score** to return to the compact view. The account remains **Not assessed**
-throughout. This separate, hypothetical 30-day fixture supplies 9/10 needs met,
+The **Demo workspace** shows the illustrative score immediately. Select
+**How this score is calculated** for optional details. The account remains **Not assessed**
+throughout; non-demo reports do not show this fixture. This separate, hypothetical 30-day fixture supplies 9/10 needs met,
 $90/$120 spending supported by meaningful use, 96/100 successful requests and 4/5
 critical workflows with usable fallbacks. The pure scorer calculates
 **0.35 × 90 + 0.30 × 75 + 0.25 × 96 + 0.10 × 80 = 86/100**.

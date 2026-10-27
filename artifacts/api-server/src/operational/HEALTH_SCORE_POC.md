@@ -3,7 +3,7 @@
 This is an isolated, deterministic experiment, **not an assessment of any Colli
 account**. The existing Daily Brief remains **Not assessed**. Its three-request
 fixture does not support this example; no numbers or results are merged into it.
-An optional disclosure in the Brief displays a static artifact from this scorer,
+The labelled demo Brief immediately displays a static artifact from this scorer,
 clearly separate from the account and current Brief. There is no new API route,
 database access, provider connection or inference call. Nemotron neither selects
 the component scores nor calculates the total.
@@ -82,5 +82,6 @@ policy for missing/not-applicable categories before scoring can be enabled.
 
 The checked-in `artifacts/colli/src/lib/health-score-sample.json` is generated with
 `node scripts/health-score-example.mjs --write-preview`. The check command and
-focused tests fail if it diverges from the scorer and fixture. The native
-Preview/Hide control has no network handler and does not replace Not assessed.
+focused tests fail if it diverges from the scorer and fixture. The optional native
+calculation disclosure has no network handler and does not replace the
+account's Not assessed state. Non-demo reports do not display this fixture.
